@@ -7,21 +7,41 @@ h1, h3, h4 {
 	font-family: arial;
 }
 
-.canvas-wrapper {
+body {
 	text-align: center;
+}
+
+.kgraph-wrapper {
+	display: inline-flex;
+	flex-direction: column;
+}
+
+.canvas-wrapper {
+	margin-bottom: 5px;
 }
 
 .canvas-background {
 	display: inline-block;
-	border: solid 2px darkslategray;
 	background: white;
+	line-height: 1;
 }
 
-.palette {
+.thick-border {
+	border: solid 2px darkslategray;
+}
+
+.thin-border {
+	border: solid 1px darkslategray;
+}
+
+#canvas {
+	cursor: url(images/brushes/4.png) 2 2, pointer;
+}
+
+.flex-row {
 	display: flex;
 	justify-content: space-between;
-	width: 640px;
-	margin: 0 auto;
+	margin-bottom: 5px;
 }
 
 .color {

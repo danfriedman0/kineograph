@@ -7,42 +7,43 @@
 </head>
 <body>
 
-	<div class="canvas-wrapper">
-		<div class="canvas-background">
-			<canvas id="canvas" width="640" height="360"></canvas>
-		</div>
-	</div>
+	<div class="kgraph-wrapper">
 
-	<br>
-
-	<div class="palette">
-		<div class="color" style="background-color: black">
-		</div>
-		<div class="color" style="background-color: gold">
-		</div>
-		<div class="color" style="background-color: lightseagreen">
-		</div>
-		<div class="color" style="background-color: forestgreen">
-		</div>
-		<div class="color" style="background-color: crimson">
-		</div>
-		<div class="color" style="background-color: dodgerblue">
-		</div>
-		<div class="color" style="background-color: darkorchid">
-		</div>
-		<div class="color" style="background-color: palevioletred">
-		</div>
-		<div class="color" style="background-color: coral">
-		</div>
-		<div class="color" style="background-color: dimgray">
-		</div>
-		<div class="color" style="background-color: white">
-		</div>
-		<div class="color" style="background-color: saddlebrown">
+		<div class="colors flex-row">
+			<div class="color" style="background-color: black"></div>
+			<div class="color" style="background-color: gold"></div>
+			<div class="color" style="background-color: lightseagreen"></div>
+			<div class="color" style="background-color: forestgreen"></div>
+			<div class="color" style="background-color: crimson"></div>
+			<div class="color" style="background-color: dodgerblue"></div>
+			<div class="color" style="background-color: darkorchid"></div>
+			<div class="color" style="background-color: palevioletred"></div>
+			<div class="color" style="background-color: coral"></div>
+			<div class="color" style="background-color: dimgray"></div>
+			<div class="color" style="background-color: white"></div>
+			<div class="color" style="background-color: saddlebrown"></div>
 		</div>
 
-	</div>
+		<div class="canvas-wrapper">
+			<div class="canvas-background thick-border">
+				<canvas id="canvas" width="640" height="360"></canvas>
+			</div>
+		</div>
 
+		<div class="buttons flex-row">
+			<button id="save-cel">Save</button>
+			<button id="clear-canvas">Clear</button>
+		</div>
+
+		<div class="cels flex-row">
+			<div class="canvas-wrapper">
+				<div class="canvas-background thin-border">
+					<canvas class="cel" width="128" height="72"></canvas>
+				</div>
+			</div>
+		</div>
+
+	</div><!-- .kgraph-wrapper -->
 
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
