@@ -42,13 +42,14 @@ function initializeCanvas() {
 	ctx.lineCap = 'round';
 
 	// get current cel canvas
-	var savedCels = [];
+	var timeline = [[]];
+
 	var celIndex = 0;
-	var currentCel = $('.cel')[celIndex];
-	var currentCelCtx = currentCel.getContext('2d');
+	var layerIndex = 0;
+	var currentLayer = timeline[layerIndex];
 
 	// save first cel
-	savedCels.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+	currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 
 	/* Drawing */
 
@@ -63,7 +64,6 @@ function initializeCanvas() {
 
 		var state = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		cachedStates.push(state);
-		currentCelCtx.drawImage(canvas, 0, 0, 124, 72);
 	});
 
 	$canvas.on('mousemove', function(e) {
@@ -119,8 +119,7 @@ function initializeCanvas() {
 
 			// ctrl + x
 			else if (e.which === 88) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);				
+				ctx.clearRect(0, 0, canvas.width, canvas.height);		
 			}
 		}
 
@@ -131,72 +130,73 @@ function initializeCanvas() {
 		
 		// left arrow
 		if (e.which === 37 && celIndex > 0)
-			switchCels(celIndex - 1);
+			switchCels(celIndex - 1, layerIndex);
 		// right arrow
-		if (e.which === 39 && celIndex < savedCels.length - 1)
-			switchCels(celIndex + 1);
+		if (e.which === 39 && celIndex < currentLayer.length - 1)
+			switchCels(celIndex + 1, layerIndex);
 	});
 
 	/* Undo */
 
 	$('#clear-canvas').on('click', function() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);
 	});
 
 	function undo() {
-		var state = cachedStates.pop();
+		if (cachedStates) {
+			var state = cachedStates.pop();
 
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.putImageData(state, 0, 0);
-		currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);
-		currentCelCtx.drawImage(canvas, 0, 0, 124, 72);
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.putImageData(state, 0, 0);
+		}
 	}
 
 	/* Adding and changing cels */
 
-	$('#add-cel').on('click', function() {
+	$('.add-cel').on('click', function() {
 		// add new cel to DOM
-		var celWrapper = $(currentCel).closest('.cel-wrapper');
-		var newCel = celWrapper.clone(true, true);
-		$(this).closest('.add-cel-wrapper').before(newCel);
+		var newCel = '<div class="cel"></div>'
+		$(this).before(newCel);
 
-		switchCels(savedCels.length);
+		// switch cels
+		var layer = $(this).closest('.layer').index();
+		switchCels(currentLayer.length, layer);
 	});
 
-	$('.cel-wrapper').on('click', function() {
+	$(document).on('click', '.cel', function() {
 		var index = $(this).index();
-		if (index != celIndex)
-			switchCels(index);
+		var layer = $(this).closest('.layer').index();
+		if (index != celIndex || layer != currentLayer)
+			switchCels(index, layer);
 	});
 
-	function switchCels(index) {
-		// save canvas
-		savedCels[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		
-		// clear canvas
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	function switchCels(index, layer) {
+		// save current cel
+		currentLayer[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-		// move to target cel
-		$(currentCel).closest('.cel-wrapper').removeClass('active');
-		var newCelWrapper = $('.cel-wrapper').eq(index).addClass('active');
+		// clear cached states
+		cachedStates = [];
 
-		currentCel = newCelWrapper.find('.cel')[0];
-		currentCelCtx = currentCel.getContext('2d');
 		celIndex = index;
+		layerIndex = layer;
+		currentLayer = timeline[layerIndex];
 
-		// save cell if this is a new cell
-		if (celIndex > savedCels.length - 1) {
-			savedCels.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+		// Create new cel or load existing cel
+		if (celIndex > currentLayer.length - 1) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 		}
 		else {
-			var imageData = savedCels[celIndex];
+			var imageData = currentLayer[celIndex];
 			ctx.putImageData(imageData, 0, 0);			
 		}
+
+		// hilight new cel
+		$('.cel').removeClass('active');
+		$('.layer').eq(layer).find('.cel').eq(index).addClass('active');
 	}
 
 }
-
 
 
 
