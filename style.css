@@ -18,20 +18,14 @@ body {
 
 .canvas-wrapper {
 	margin-bottom: 5px;
+	line-height: 0;
 }
 
 .canvas-background {
 	display: inline-block;
 	background: white;
-	line-height: 1;
-}
-
-.thick-border {
+	line-height: 0;
 	border: solid 2px darkslategray;
-}
-
-.thin-border {
-	border: solid 1px darkslategray;
 }
 
 #canvas {
@@ -40,9 +34,17 @@ body {
 
 .flex-row {
 	display: flex;
-	justify-content: space-between;
 	margin-bottom: 5px;
 }
+
+.flex-stretch {
+	justify-content: space-between;
+}
+
+.flex-item-left {
+	margin-right: 5px;
+}
+
 
 .color {
 	width: 25px;
@@ -51,4 +53,36 @@ body {
 
 .color:hover {
 	cursor: pointer;
+}
+
+.timeline-container {
+	display: none;
+}
+
+.cel {
+	cursor: pointer;
+/*	width: 15px;
+	height: 15px;
+	border: 1px solid #333;
+	background-color: lightgray;*/
+}
+
+.cel-wrapper {
+	box-shadow: none;
+	border: none;
+}
+
+.active {
+	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+	border: 1px solid rgba(81, 203, 238, 1);
+}
+
+.add-cel-wrapper {
+	align-self: center;
+}
+
+#add-cel {
+	text-decoration: none;
+	font-size: 50px;
+	margin: 15px;
 }

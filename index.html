@@ -9,7 +9,7 @@
 
 	<div class="kgraph-wrapper">
 
-		<div class="colors flex-row">
+		<div class="colors flex-row flex-stretch">
 			<div class="color" style="background-color: black"></div>
 			<div class="color" style="background-color: gold"></div>
 			<div class="color" style="background-color: lightseagreen"></div>
@@ -25,21 +25,62 @@
 		</div>
 
 		<div class="canvas-wrapper">
-			<div class="canvas-background thick-border">
+			<div class="canvas-background">
 				<canvas id="canvas" width="640" height="360"></canvas>
 			</div>
 		</div>
 
-		<div class="buttons flex-row">
-			<button id="save-cel">Save</button>
-			<button id="clear-canvas">Clear</button>
-		</div>
-
-		<div class="cels flex-row">
-			<div class="canvas-wrapper">
-				<div class="canvas-background thin-border">
+		<div class="cels flex-row flex-left">
+			<div class="cel-wrapper canvas-wrapper flex-item-left active">
+				<div class="canvas-background">
 					<canvas class="cel" width="128" height="72"></canvas>
 				</div>
+			</div>
+			<div class="add-cel-wrapper">
+				<a href="#" id="add-cel">+</a>
+			</div>
+		</div>
+
+		<div id="timeline-container" class="timeline-container">
+			<div class="layer-nav">
+
+			</div>
+
+			<div class="layer flex-row">
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
+				<div class="cel"></div>
 			</div>
 		</div>
 

@@ -41,11 +41,14 @@ function initializeCanvas() {
 	ctx.lineWidth = brushes[brushNo][0];
 	ctx.lineCap = 'round';
 
-	// get cel
+	// get current cel canvas
 	var savedCels = [];
-	var celNo = 0;
-	var cel = $('.cel')[celNo];
-	var celCtx = cel.getContext('2d');
+	var celIndex = 0;
+	var currentCel = $('.cel')[celIndex];
+	var currentCelCtx = currentCel.getContext('2d');
+
+	// save first cel
+	savedCels.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 
 	/* Drawing */
 
@@ -60,7 +63,7 @@ function initializeCanvas() {
 
 		var state = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		cachedStates.push(state);
-		celCtx.drawImage(canvas, 0, 0, 124, 72);
+		currentCelCtx.drawImage(canvas, 0, 0, 124, 72);
 	});
 
 	$canvas.on('mousemove', function(e) {
@@ -102,35 +105,95 @@ function initializeCanvas() {
 		}
 	}
 
-	/* Undo */
+	/* Keyboard shortcuts */
 
 	$(document).on('keydown', function(e) {
-		if (e.which === 90 && e.metaKey && cachedStates.length) {
-			ctx.stroke();
-			down = false;
-			undo();
+
+		if (e.metaKey) {
+			// ctrl + z
+			if (e.which === 90 && cachedStates.length) {
+				ctx.stroke();
+				down = false;
+				undo();				
+			}
+
+			// ctrl + x
+			else if (e.which === 88) {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);				
+			}
 		}
+
+		// ctrl + x (88)
+		// ctrl + c (67)
+		// ctrl + v (86)
+
+		
+		// left arrow
+		if (e.which === 37 && celIndex > 0)
+			switchCels(celIndex - 1);
+		// right arrow
+		if (e.which === 39 && celIndex < savedCels.length - 1)
+			switchCels(celIndex + 1);
 	});
+
+	/* Undo */
 
 	$('#clear-canvas').on('click', function() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);
 	});
-
 
 	function undo() {
 		var state = cachedStates.pop();
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.putImageData(state, 0, 0);
+		currentCelCtx.clearRect(0, 0, currentCel.width, currentCel.height);
+		currentCelCtx.drawImage(canvas, 0, 0, 124, 72);
 	}
 
-	/* Saving */
+	/* Adding and changing cels */
 
-	$('#save-cel').on('click', function() {
-		var newCel = $('.cel')[cels.length];
-		var celCtx = newCel.getContext('2d');
-		celCtx.drawImage(canvas, 0, 0, 124, 72);
+	$('#add-cel').on('click', function() {
+		// add new cel to DOM
+		var celWrapper = $(currentCel).closest('.cel-wrapper');
+		var newCel = celWrapper.clone(true, true);
+		$(this).closest('.add-cel-wrapper').before(newCel);
+
+		switchCels(savedCels.length);
 	});
+
+	$('.cel-wrapper').on('click', function() {
+		var index = $(this).index();
+		if (index != celIndex)
+			switchCels(index);
+	});
+
+	function switchCels(index) {
+		// save canvas
+		savedCels[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		
+		// clear canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		// move to target cel
+		$(currentCel).closest('.cel-wrapper').removeClass('active');
+		var newCelWrapper = $('.cel-wrapper').eq(index).addClass('active');
+
+		currentCel = newCelWrapper.find('.cel')[0];
+		currentCelCtx = currentCel.getContext('2d');
+		celIndex = index;
+
+		// save cell if this is a new cell
+		if (celIndex > savedCels.length - 1) {
+			savedCels.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+		}
+		else {
+			var imageData = savedCels[celIndex];
+			ctx.putImageData(imageData, 0, 0);			
+		}
+	}
 
 }
 
