@@ -37,20 +37,15 @@
 			<div class="color" id="eraser"></div>
 		</div>
 
-		<div class="canvas-wrapper">
-			<div class="canvas-background">
-				<canvas id="canvas" width="640" height="360"></canvas>
-			</div>
+		<div id="canvas-wrapper">
+			<canvas id="canvas" width="640" height="360"></canvas>
+			<canvas id="background" width="640" height="360"></canvas>
 		</div>
 
-		<div class="cels flex-row flex-left">
-			<div class="cel-wrapper canvas-wrapper flex-item-left active">
-				<div class="canvas-background">
-					<canvas class="cel" width="128" height="72"></canvas>
-				</div>
-			</div>
-			<div class="add-cel-wrapper">
-				<a href="#" id="add-cel">+</a>
+		<div id="buttons" class="flex-row flex-stretch">
+			<div>
+				<input id="onion-skin" type="checkbox">
+				<label for="onion-skin">onion skin</label>
 			</div>
 		</div>
 

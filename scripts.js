@@ -15,6 +15,11 @@ function initializeCanvas() {
 	var down = false;
 	var cachedStates = [];
 
+	if ($('#onion-skin')[0].checked)
+		var useOnionSkin = true;
+	else
+		var useOnionSkin = false;
+
 	// brushes
 	var color = "black";
 	var brushNo = 0;
@@ -35,8 +40,15 @@ function initializeCanvas() {
 	var offset = $canvas.offset();
 	var canvas = $canvas[0];
 
+	// get background
+	var background = $('#background')[0];
+	var bgctx = background.getContext('2d');
+	bgctx.fillStyle = "rgba(255, 255, 255, .5)";
+
 	// brush settings
 	var ctx = canvas.getContext('2d');
+
+	// settings
 	ctx.strokeStyle = color;
 	ctx.lineWidth = brushes[brushNo][0];
 	ctx.lineCap = 'round';
@@ -50,6 +62,7 @@ function initializeCanvas() {
 
 	// save first cel
 	currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+
 
 	/* Drawing */
 
@@ -174,6 +187,9 @@ function initializeCanvas() {
 		// save current cel
 		currentLayer[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+		// clear canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 		// clear cached states
 		cachedStates = [];
 
@@ -183,7 +199,6 @@ function initializeCanvas() {
 
 		// Create new cel or load existing cel
 		if (celIndex > currentLayer.length - 1) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 		}
 		else {
@@ -191,11 +206,38 @@ function initializeCanvas() {
 			ctx.putImageData(imageData, 0, 0);			
 		}
 
+		onionSkin();
+
 		// hilight new cel
 		$('.cel').removeClass('active');
 		$('.layer').eq(layer).find('.cel').eq(index).addClass('active');
 	}
 
+	$('#onion-skin').on('change', function() {
+		if (this.checked) {
+			$('#background').show();
+			useOnionSkin = true;
+			onionSkin();
+		}
+		else {
+			$('#background').hide();
+			useOnionSkin = false;
+		}
+	})
+
+	function onionSkin() {
+		if (useOnionSkin) {
+			if (celIndex > 0) {
+				bgctx.clearRect(0, 0, background.width, background.height);
+				var imageData = currentLayer[celIndex - 1];
+				bgctx.putImageData(imageData, 0, 0);
+				bgctx.fillRect(0, 0, background.width, background.height);
+			}
+			else {
+				bgctx.clearRect(0, 0, background.width, background.height);
+			}			
+		}
+	}
 }
 
 

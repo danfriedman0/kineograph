@@ -17,20 +17,24 @@ body {
 	flex-direction: column;
 }
 
-.canvas-wrapper {
+#canvas-wrapper {
 	margin: 5px 0;
-	line-height: 0;
-}
-
-.canvas-background {
 	display: inline-block;
-	background: white;
 	line-height: 0;
 	border: solid 2px darkslategray;
+	position: relative;
 }
 
 #canvas {
 	cursor: url(images/brushes/4.png) 2 2, pointer;
+}
+
+#background {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	z-index: -1;
 }
 
 .flex-row {
@@ -50,11 +54,11 @@ body {
 	margin-right: 5px;
 }
 
-
 .color {
 	width: 25px;
 	height: 25px;
 	cursor: pointer;
+	border-radius: 5px;
 }
 
 #eraser {
@@ -63,27 +67,11 @@ body {
 	border: 1px solid red;
 }
 
+/* Buttons */
 
-.cels {
-	display: none;
-}
-
-.cel-wrapper {
-	box-shadow: none;
-	border: none;
-}
-
-.active {
-	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-	border: 1px solid rgba(81, 203, 238, 1);
-}
-
-.add-cel {
-	align-self: center;
-}
-
-.add-cel a {
-	text-decoration: none;
+#buttons {
+	font-size: .8em;
+	margin-bottom: 5px;
 }
 
 /* Timeline */
@@ -111,14 +99,25 @@ body {
 	background-color: white;
 	flex-shrink: 0;
 	align-self: center;
+	border-radius: 2px;
 }
 
 .timeline-row {
 	margin: 5px;
 }
 
+.active {
+	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+	border: 1px solid rgba(81, 203, 238, 1);
+}
+
 .add-cel {
 	margin: 0 5px;
+	align-self: center;
+}
+
+.add-cel a {
+	text-decoration: none;
 }
 
 
