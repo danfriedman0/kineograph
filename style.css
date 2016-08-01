@@ -9,6 +9,7 @@ h1, h3, h4 {
 
 body {
 	text-align: center;
+	font-family: 'Mada', sans-serif;
 }
 
 .kgraph-wrapper {
@@ -17,7 +18,7 @@ body {
 }
 
 .canvas-wrapper {
-	margin-bottom: 5px;
+	margin: 5px 0;
 	line-height: 0;
 }
 
@@ -34,7 +35,11 @@ body {
 
 .flex-row {
 	display: flex;
-	margin-bottom: 5px;
+}
+
+.flex-column {
+	display: flex;
+	flex-flow: column;
 }
 
 .flex-stretch {
@@ -49,22 +54,18 @@ body {
 .color {
 	width: 25px;
 	height: 25px;
-}
-
-.color:hover {
 	cursor: pointer;
 }
 
-.timeline-container {
+#eraser {
+	width: 23px;
+	height: 23px;
+	border: 1px solid red;
+}
+
+
+.cels {
 	display: none;
-}
-
-.cel {
-	cursor: pointer;
-/*	width: 15px;
-	height: 15px;
-	border: 1px solid #333;
-	background-color: lightgray;*/
 }
 
 .cel-wrapper {
@@ -77,12 +78,55 @@ body {
 	border: 1px solid rgba(81, 203, 238, 1);
 }
 
-.add-cel-wrapper {
+.add-cel {
 	align-self: center;
 }
 
-#add-cel {
+.add-cel a {
 	text-decoration: none;
-	font-size: 50px;
-	margin: 15px;
 }
+
+/* Timeline */
+
+#timeline-container {
+	border: 2px solid darkslategray;
+	width: 640px;
+}
+
+#layer-nav {
+	list-style: none;
+}
+
+#timeline-inner {
+	width: 550px;
+	overflow: scroll;
+}
+
+.cel {
+	cursor: pointer;
+	width: 15px;
+	height: 15px;
+	border: 1px solid #333;
+	margin-right: 1px;
+	background-color: white;
+	flex-shrink: 0;
+	align-self: center;
+}
+
+.timeline-row {
+	margin: 5px;
+}
+
+.add-cel {
+	margin: 0 5px;
+}
+
+
+
+
+
+
+
+
+
+

@@ -4,24 +4,37 @@
 	<meta charset="utf-8">
 	<title>Test</title>
 	<link rel="stylesheet" href="style.css">
+	<link href='https://fonts.googleapis.com/css?family=Mada' rel='stylesheet' type='text/css'>
 </head>
 <body>
+
+	<h1>Kineograph</h1>
 
 	<div class="kgraph-wrapper">
 
 		<div class="colors flex-row flex-stretch">
 			<div class="color" style="background-color: black"></div>
-			<div class="color" style="background-color: gold"></div>
-			<div class="color" style="background-color: lightseagreen"></div>
-			<div class="color" style="background-color: forestgreen"></div>
+			<div class="color" style="background-color: darkred"></div>
 			<div class="color" style="background-color: crimson"></div>
+			<div class="color" style="background-color: lightcoral"></div>
+			<div class="color" style="background-color: darkorange"></div>
+			<div class="color" style="background-color: gold"></div>
+			<div class="color" style="background-color: yellow"></div>
+			<div class="color" style="background-color: greenyellow"></div>
+			<div class="color" style="background-color: seagreen"></div>
+			<div class="color" style="background-color: mediumturquoise"></div>
 			<div class="color" style="background-color: dodgerblue"></div>
-			<div class="color" style="background-color: darkorchid"></div>
-			<div class="color" style="background-color: palevioletred"></div>
-			<div class="color" style="background-color: coral"></div>
-			<div class="color" style="background-color: dimgray"></div>
-			<div class="color" style="background-color: white"></div>
+			<div class="color" style="background-color: midnightblue"></div>
+			<div class="color" style="background-color: indigo"></div>
+			<div class="color" style="background-color: mediumorchid"></div>
+			<div class="color" style="background-color: violet"></div>
+			<div class="color" style="background-color: mistyrose"></div>
+			<div class="color" style="background-color: rosybrown"></div>
 			<div class="color" style="background-color: saddlebrown"></div>
+			<div class="color" style="background-color: silver"></div>
+			<div class="color" style="background-color: ivory"></div>
+			<div class="color" style="background-color: white"></div>
+			<div class="color" id="eraser"></div>
 		</div>
 
 		<div class="canvas-wrapper">
@@ -41,46 +54,20 @@
 			</div>
 		</div>
 
-		<div id="timeline-container" class="timeline-container">
-			<div class="layer-nav">
-
+		<div id="timeline-container" class="timeline-container flex-row flex-stretch">
+			<div id="layer-navbar" class="timeline-row">
+				<div class="layer-nav">Layer 1</div>
 			</div>
 
-			<div class="layer flex-row">
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
-				<div class="cel"></div>
+			<div id="timeline-inner">
+
+				<div class="layer flex-row timeline-row">
+					<div class="cel active"></div>
+					<div class="add-cel">
+						<a href="#">+</a>
+					</div>
+				</div>
+
 			</div>
 		</div>
 
