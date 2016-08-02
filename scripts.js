@@ -9,16 +9,52 @@ $(document).ready(function() {
 
 });
 
+
 function initializeCanvas() {
+	"use strict";
+
+	var Layer = function(index, canvas, settings) {
+		this.index = index;
+		this.canvas = canvas;
+		this.ctx = canvas.getContext('2d');
+		this.cels = [];
+		this.settings = settings;
+
+		// initialize canvas settings
+		$.extend({}, this.ctx, settings);
+	}
+
+	var Kgraph = function(layers, bgLayers) {
+		this.useOnionSkin = false;
+		this.onionSkinDepth = 1;
+		this.settings = {
+			strokeStyle: '#fff',
+			lineWidth: 1,
+			lineCap: 'round'
+		};
+
+		this.down = false;
+		this.cachedStates = [];
+		
+		this.layers = layers;
+		this.bgLayers = bgLayers;
+		this.celIndex = 0;
+		this.layerIndex = 0;
+		this.currentLayer = this.layers[0];
+	}
 
 	// initialize
 	var down = false;
 	var cachedStates = [];
 
-	if ($('#onion-skin')[0].checked)
+	if ($('#onion-skin')[0].checked) {
 		var useOnionSkin = true;
-	else
+	}
+	else {
 		var useOnionSkin = false;
+	}
+
+	var onionSkinDepth = 1;
 
 	// brushes
 	var color = "black";
@@ -40,10 +76,12 @@ function initializeCanvas() {
 	var offset = $canvas.offset();
 	var canvas = $canvas[0];
 
-	// get background
-	var background = $('#background')[0];
-	var bgctx = background.getContext('2d');
-	bgctx.fillStyle = "rgba(255, 255, 255, .5)";
+	// get background layers
+	var bgLayers = $('.background-layer');
+	var bgctxs = [];
+	for (var i = 0; i < bgLayers.length; i++) {
+		bgctxs.push(bgLayers[i].getContext('2d'));
+	}
 
 	// brush settings
 	var ctx = canvas.getContext('2d');
@@ -53,9 +91,7 @@ function initializeCanvas() {
 	ctx.lineWidth = brushes[brushNo][0];
 	ctx.lineCap = 'round';
 
-	// get current cel canvas
 	var timeline = [[]];
-
 	var celIndex = 0;
 	var layerIndex = 0;
 	var currentLayer = timeline[layerIndex];
@@ -97,14 +133,22 @@ function initializeCanvas() {
 	/* Brush settings */
 
 	$('.color').on('click', function() {
-		ctx.strokeStyle = $(this).css('background-color');
+		if (this.id == 'eraser') {
+			ctx.globalCompositeOperation = 'destination-out';
+		}
+		else {
+			ctx.globalCompositeOperation = 'source-over';
+			ctx.strokeStyle = $(this).css('background-color');
+		}
 	});
 
 	$canvas.on('mousewheel DOMMouseScroll', function(e) {
-		if (e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0)
+		if (e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0 && !$canvas.hasClass('select-mode')) {
 			changeBrushSize(1);
-		else
+		}
+		else {
 			changeBrushSize(-1);
+		}
 	});
 
 	function changeBrushSize(n) {
@@ -140,6 +184,10 @@ function initializeCanvas() {
 		// ctrl + c (67)
 		// ctrl + v (86)
 
+		// s(elect)
+		if (e.which == 83) {
+			$canvas.toggleClass('select-mode');
+		}
 		
 		// left arrow
 		if (e.which === 37 && celIndex > 0)
@@ -164,7 +212,7 @@ function initializeCanvas() {
 		}
 	}
 
-	/* Adding and changing cels */
+	/* Adding and switching cels */
 
 	$('.add-cel').on('click', function() {
 		// add new cel to DOM
@@ -179,8 +227,9 @@ function initializeCanvas() {
 	$(document).on('click', '.cel', function() {
 		var index = $(this).index();
 		var layer = $(this).closest('.layer').index();
-		if (index != celIndex || layer != currentLayer)
+		if (index != celIndex || layer != currentLayer) {
 			switchCels(index, layer);
+		}
 	});
 
 	function switchCels(index, layer) {
@@ -206,7 +255,9 @@ function initializeCanvas() {
 			ctx.putImageData(imageData, 0, 0);			
 		}
 
-		onionSkin();
+		if (useOnionSkin) {
+			onionSkin(onionSkinDepth);
+		}
 
 		// hilight new cel
 		$('.cel').removeClass('active');
@@ -215,28 +266,32 @@ function initializeCanvas() {
 
 	$('#onion-skin').on('change', function() {
 		if (this.checked) {
-			$('#background').show();
+			$('.background-layer').show();
 			useOnionSkin = true;
-			onionSkin();
+			onionSkin(onionSkinDepth);
 		}
 		else {
-			$('#background').hide();
+			$('.background-layer').hide();
 			useOnionSkin = false;
 		}
-	})
+	});
 
-	function onionSkin() {
-		if (useOnionSkin) {
-			if (celIndex > 0) {
-				bgctx.clearRect(0, 0, background.width, background.height);
-				var imageData = currentLayer[celIndex - 1];
-				bgctx.putImageData(imageData, 0, 0);
-				bgctx.fillRect(0, 0, background.width, background.height);
-			}
-			else {
-				bgctx.clearRect(0, 0, background.width, background.height);
-			}			
+	function setAlpha(data, alpha) {
+		for (var i = 3, l = data.length; i < l; i += 4) {
+			data[i] *= alpha;
 		}
+	}
+
+	function onionSkin(depth) {
+		var skinIndex = celIndex - depth;
+		for (skinIndex; skinIndex < celIndex; skinIndex++) {
+			if (skinIndex >= 0) {
+				var imageData = bgctx.createImageData(background.width, background.height);
+				imageData.data.set(currentLayer[skinIndex].data);
+				setAlpha(imageData.data, .5);
+				bgctx.putImageData(imageData, 0, 0);
+			}
+		}		
 	}
 }
 

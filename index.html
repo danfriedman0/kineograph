@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Test</title>
+	<title>Kineograph</title>
 	<link rel="stylesheet" href="style.css">
 	<link href='https://fonts.googleapis.com/css?family=Mada' rel='stylesheet' type='text/css'>
 </head>
@@ -39,24 +39,35 @@
 
 		<div id="canvas-wrapper">
 			<canvas id="canvas" width="640" height="360"></canvas>
-			<canvas id="background" width="640" height="360"></canvas>
+			<canvas class="background-layer" width="640" height="360"></canvas>
+			<canvas class="background-layer" width="640" height="360"></canvas>
 		</div>
 
 		<div id="buttons" class="flex-row flex-stretch">
 			<div>
 				<input id="onion-skin" type="checkbox">
-				<label for="onion-skin">onion skin</label>
+				<label for="onion-skin" class="small-text">onion skin</label>
 			</div>
 		</div>
 
 		<div id="timeline-container" class="timeline-container flex-row flex-stretch">
 			<div id="layer-navbar" class="timeline-row">
 				<div class="layer-nav">Layer 1</div>
+				<div class="layer-nav">
+					<a id="add-layer" class="small-text" href="#">New layer</a>
+				</div>
 			</div>
 
 			<div id="timeline-inner">
 
 				<div class="layer flex-row timeline-row">
+					<div class="cel active"></div>
+					<div class="add-cel">
+						<a href="#">+</a>
+					</div>
+				</div>
+
+				<div class="layer template flex-row timeline-row">
 					<div class="cel active"></div>
 					<div class="add-cel">
 						<a href="#">+</a>

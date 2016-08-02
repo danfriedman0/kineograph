@@ -2,14 +2,15 @@
  * Style template
  */ 
 
-h1, h3, h4 {
-	text-align: center;
-	font-family: arial;
-}
 
 body {
 	text-align: center;
 	font-family: 'Mada', sans-serif;
+	background-color: white;
+}
+
+.small-text {
+	font-size: .8em;
 }
 
 .kgraph-wrapper {
@@ -29,7 +30,11 @@ body {
 	cursor: url(images/brushes/4.png) 2 2, pointer;
 }
 
-#background {
+#canvas.select-mode {
+	cursor: crosshair;
+}
+
+.background-layer {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -70,7 +75,6 @@ body {
 /* Buttons */
 
 #buttons {
-	font-size: .8em;
 	margin-bottom: 5px;
 }
 
@@ -88,6 +92,10 @@ body {
 #timeline-inner {
 	width: 550px;
 	overflow: scroll;
+}
+
+.layer.template {
+	display: none;
 }
 
 .cel {
