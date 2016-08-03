@@ -5,7 +5,7 @@
 
 body {
 	text-align: center;
-	font-family: 'Mada', sans-serif;
+	font-family: sans-serif;
 	background-color: white;
 }
 
@@ -13,7 +13,7 @@ body {
 	font-size: .8em;
 }
 
-.kgraph-wrapper {
+#kgraph {
 	display: inline-flex;
 	flex-direction: column;
 }
@@ -24,9 +24,6 @@ body {
 	line-height: 0;
 	border: solid 2px darkslategray;
 	position: relative;
-}
-
-#canvas {
 	cursor: url(images/brushes/4.png) 2 2, pointer;
 }
 

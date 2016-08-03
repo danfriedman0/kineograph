@@ -3,63 +3,24 @@
  */
 
 
-$(document).ready(function() {
+/* KGraph */
 
-	initializeCanvas();
+function KGraph($kgraph, useOnionSkin, onionSkinDepth) {
+	this.$kgraph = $kgraph;
+	this.$canvasWrapper = $kgraph.find('#canvas-wrapper');
+	this.$color = $kgraph.find('.color');
 
-});
+	this.useOnionSkin = useOnionSkin;
+	this.onionSkinDepth = onionSkinDepth;
+	
+	this.settings = {
+		strokeStyle: '#000',
+		lineWidth: 1,
+		lineCap: 'round',
+		globalCompositeOperation: 'source-over'
+	};
 
-
-function initializeCanvas() {
-	"use strict";
-
-	var Layer = function(index, canvas, settings) {
-		this.index = index;
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d');
-		this.cels = [];
-		this.settings = settings;
-
-		// initialize canvas settings
-		$.extend({}, this.ctx, settings);
-	}
-
-	var Kgraph = function(layers, bgLayers) {
-		this.useOnionSkin = false;
-		this.onionSkinDepth = 1;
-		this.settings = {
-			strokeStyle: '#fff',
-			lineWidth: 1,
-			lineCap: 'round'
-		};
-
-		this.down = false;
-		this.cachedStates = [];
-		
-		this.layers = layers;
-		this.bgLayers = bgLayers;
-		this.celIndex = 0;
-		this.layerIndex = 0;
-		this.currentLayer = this.layers[0];
-	}
-
-	// initialize
-	var down = false;
-	var cachedStates = [];
-
-	if ($('#onion-skin')[0].checked) {
-		var useOnionSkin = true;
-	}
-	else {
-		var useOnionSkin = false;
-	}
-
-	var onionSkinDepth = 1;
-
-	// brushes
-	var color = "black";
-	var brushNo = 0;
-	var brushes = [
+	this.brushes = [
 		[1, 'url(images/brushes/4.png) 2 2, pointer'],
 		[2, 'url(images/brushes/8.png) 4 4, pointer'],
 		[3, 'url(images/brushes/12.png) 6 6, pointer'],
@@ -71,228 +32,461 @@ function initializeCanvas() {
 		[24, 'url(images/brushes/96.png) 48 48, pointer']
 	];
 
-	// get canvas
-	var $canvas = $('#canvas');
-	var offset = $canvas.offset();
-	var canvas = $canvas[0];
+	this.brushNo = 0;
+	
+	this.layers = [];
+	this.activeLayer = null;
+	this.frameIndex = 0;
 
-	// get background layers
-	var bgLayers = $('.background-layer');
-	var bgctxs = [];
-	for (var i = 0; i < bgLayers.length; i++) {
-		bgctxs.push(bgLayers[i].getContext('2d'));
-	}
-
-	// brush settings
-	var ctx = canvas.getContext('2d');
-
-	// settings
-	ctx.strokeStyle = color;
-	ctx.lineWidth = brushes[brushNo][0];
-	ctx.lineCap = 'round';
-
-	var timeline = [[]];
-	var celIndex = 0;
-	var layerIndex = 0;
-	var currentLayer = timeline[layerIndex];
-
-	// save first cel
-	currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+	this.onionSkinLayers = [];
 
 
-	/* Drawing */
+	/* Events */
+	var me = this;
 
-	$canvas.on('click', function(e) {
-		if (!down) {
-			down = true;
-			var x = e.pageX - offset.left;
-			var y = e.pageY - offset.top;
-			ctx.beginPath();
-			ctx.moveTo(x, y);
-		}
-
-		var state = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		cachedStates.push(state);
-	});
-
-	$canvas.on('mousemove', function(e) {
-		if (down) {
-			var x = e.pageX - offset.left;
-			var y = e.pageY - offset.top;
-			ctx.lineTo(x, y);
-			ctx.stroke();
-		}
-	});
-
-	$canvas.on('dblclick', function() {
-		cachedStates.splice(-2, 2);
-		ctx.stroke();
-		down = false;
-	});
-
-	/* Brush settings */
-
-	$('.color').on('click', function() {
-		if (this.id == 'eraser') {
-			ctx.globalCompositeOperation = 'destination-out';
+	me.$color.on('click', function(e) {
+		var color = $(this).css('background-color');
+		if (color) {
+			me.changeColor(color);
 		}
 		else {
-			ctx.globalCompositeOperation = 'source-over';
-			ctx.strokeStyle = $(this).css('background-color');
+			me.changeColor('eraser');
 		}
 	});
 
-	$canvas.on('mousewheel DOMMouseScroll', function(e) {
-		if (e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0 && !$canvas.hasClass('select-mode')) {
-			changeBrushSize(1);
+	me.$canvasWrapper.on('mousewheel DOMMouseScroll', function(e) {
+		if (e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0) {
+			me.changeBrushSize(me.brushNo + 1);
 		}
 		else {
-			changeBrushSize(-1);
+			me.changeBrushSize(me.brushNo - 1);
 		}
 	});
-
-	function changeBrushSize(n) {
-		if (brushNo + n >= 0 && brushNo + n <= brushes.length - 1) {
-			brushNo += n;
-			var brush = brushes[brushNo];
-
-			ctx.lineWidth = brush[0];
-
-			$canvas.css('cursor', brush[1]);
-		}
-	}
-
-	/* Keyboard shortcuts */
 
 	$(document).on('keydown', function(e) {
-
-		if (e.metaKey) {
-			// ctrl + z
-			if (e.which === 90 && cachedStates.length) {
-				ctx.stroke();
-				down = false;
-				undo();				
-			}
-
-			// ctrl + x
-			else if (e.which === 88) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);		
-			}
-		}
-
-		// ctrl + x (88)
-		// ctrl + c (67)
-		// ctrl + v (86)
-
-		// s(elect)
-		if (e.which == 83) {
-			$canvas.toggleClass('select-mode');
-		}
-		
-		// left arrow
-		if (e.which === 37 && celIndex > 0)
-			switchCels(celIndex - 1, layerIndex);
-		// right arrow
-		if (e.which === 39 && celIndex < currentLayer.length - 1)
-			switchCels(celIndex + 1, layerIndex);
+		me.handleKeypress(e.metaKey, e.which);
 	});
 
-	/* Undo */
-
-	$('#clear-canvas').on('click', function() {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-	});
-
-	function undo() {
-		if (cachedStates) {
-			var state = cachedStates.pop();
-
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.putImageData(state, 0, 0);
-		}
-	}
-
-	/* Adding and switching cels */
-
-	$('.add-cel').on('click', function() {
-		// add new cel to DOM
-		var newCel = '<div class="cel"></div>'
-		$(this).before(newCel);
-
-		// switch cels
-		var layer = $(this).closest('.layer').index();
-		switchCels(currentLayer.length, layer);
+	$(document).on('click', '.add-cel', function() {
+		var layerIndex = $(this).index('.add-cel');
+		me.addFrame(layerIndex);
 	});
 
 	$(document).on('click', '.cel', function() {
-		var index = $(this).index();
-		var layer = $(this).closest('.layer').index();
-		if (index != celIndex || layer != currentLayer) {
-			switchCels(index, layer);
-		}
+		var frameIndex = $(this).index();
+		me.changeFrame(frameIndex);
 	});
+}
 
-	function switchCels(index, layer) {
-		// save current cel
-		currentLayer[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+KGraph.prototype.addLayer = function(index, $canvas, $layer) {
+	var newLayer = new KGraph.TimelineLayer(index, $canvas, $layer, this.settings);
+	this.layers.push(newLayer);
+	this.changeLayer(index);
+};
 
-		// clear canvas
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+KGraph.prototype.changeLayer = function(index) {
+	if (this.activeLayer) {
+		this.activeLayer.deactivate();
+		this.activeLayer.refreshSettings(this.settings);
+	}
+	this.activeLayer = this.layers[index];
+};
 
-		// clear cached states
-		cachedStates = [];
+KGraph.prototype.changeColor = function(color) {
+	if (color === 'eraser') {
+		this.settings.globalCompositeOperation = 'destination-out';
+	}
+	else {
+		this.settings.globalCompositeOperation = 'source-over';
+		this.settings.strokeStyle = color;
+	}
+	this.activeLayer.refreshSettings(this.settings);
+};
 
-		celIndex = index;
-		layerIndex = layer;
-		currentLayer = timeline[layerIndex];
+KGraph.prototype.changeBrushSize = function(n) {
+	if (n >= 0 && n < this.brushes.length) {
+		this.brushNo = n;
+		var brush = this.brushes[n];
 
-		// Create new cel or load existing cel
-		if (celIndex > currentLayer.length - 1) {
-			currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+		this.settings.lineWidth = brush[0];
+		this.activeLayer.refreshSettings(this.settings);
+
+		this.$canvasWrapper.css('cursor', brush[1]);
+	}
+};
+
+KGraph.prototype.handleKeypress = function(metaKey, key) {
+	if (metaKey) {
+		// ctrl + z
+		if (key === 90) {
+			this.activeLayer.brushDown = false;
+			this.activeLayer.undo();
 		}
-		else {
-			var imageData = currentLayer[celIndex];
-			ctx.putImageData(imageData, 0, 0);			
-		}
 
-		if (useOnionSkin) {
-			onionSkin(onionSkinDepth);
+		// ctrl + x
+		else if (key === 88) {
+			this.activeLayer.clear();
 		}
-
-		// hilight new cel
-		$('.cel').removeClass('active');
-		$('.layer').eq(layer).find('.cel').eq(index).addClass('active');
 	}
 
-	$('#onion-skin').on('change', function() {
-		if (this.checked) {
-			$('.background-layer').show();
-			useOnionSkin = true;
-			onionSkin(onionSkinDepth);
-		}
-		else {
-			$('.background-layer').hide();
-			useOnionSkin = false;
-		}
+	console.log(this.activeLayer.cels.length);
+
+	// left arrow
+	if (key === 37 && this.frameIndex > 0) {
+		this.changeFrame(this.frameIndex - 1);
+	}
+
+	// right arrow
+	else if (key === 39 && this.frameIndex < this.activeLayer.cels.length - 1) {
+		this.changeFrame(this.frameIndex + 1);
+	}
+}
+
+KGraph.prototype.changeFrame = function(frameIndex) {
+	this.layers.forEach(function(layer) {
+		layer.switchCel(frameIndex);
 	});
+	this.frameIndex = frameIndex;
+}
 
-	function setAlpha(data, alpha) {
-		for (var i = 3, l = data.length; i < l; i += 4) {
-			data[i] *= alpha;
-		}
+KGraph.prototype.addFrame = function(layerIndex) {
+	var layer = this.layers[layerIndex];
+	layer.addCel();
+	this.frameIndex = layer.cels.length - 1;
+	this.changeFrame(this.frameIndex);
+}
+
+
+/* KGraph.KCanvas */
+
+KGraph.KCanvas = function(index, $canvas, settings) {
+	this.index = index;
+	this.$canvas = $canvas;
+	this.offset = $canvas ? $canvas.offset() : null;
+	this.canvas = $canvas ? $canvas[0] : null;
+	this.ctx = $.extend(canvas.getContext('2d'), settings);
+	this.active = true;
+}
+
+KGraph.KCanvas.prototype.clear = function() {
+	this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+};
+
+KGraph.KCanvas.prototype.drawCel = function(imageData) {
+	this.clear();
+	this.ctx.putImageData(imageData, 0, 0);
+};
+
+KGraph.KCanvas.prototype.deactivate = function() {
+	if (this.active) {
+		this.active = false;
+		this.$canvas.removeClass('active');
+	}
+}
+
+KGraph.KCanvas.prototype.activate = function() {
+	if (!this.active) {
+		this.active = true;
+		this.$canvas.addClass('active');
+	}
+}
+
+/* KGraph.TimelineLayer */
+
+KGraph.TimelineLayer = function(index, $canvas, $layer, settings) {
+	KGraph.KCanvas.call(this, index, $canvas, settings);
+	this.cels = [];
+	this.$layer = $layer;		// DOM cels
+	this.celIndex = 0;
+	this.hidden = false;
+	this.brushDown = false;
+	this.cachedStates = [];
+
+	// add first cel
+	var firstCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+	this.cels.push(firstCel);
+
+	// Events
+	var me = this;
+
+	this.$canvas
+		.on('click', function(e) {
+			me.startStroke(e.pageX, e.pageY);
+		})
+		.on('mousemove', function(e) {
+			me.strokeSegment(e.pageX, e.pageY);
+		})
+		.on('dblclick', function() {
+			me.closeStroke();
+		});
+}
+
+KGraph.TimelineLayer.prototype = new KGraph.KCanvas();
+
+KGraph.TimelineLayer.prototype.switchCel = function(targetIndex) {
+	// Look for the target cel in memory and draw it if it exists
+	var targetCel = this.cels[targetIndex];
+	if (targetCel) {
+		this.drawCel(this.cels[targetIndex]);
+	}
+	else {
+		this.clear();
 	}
 
-	function onionSkin(depth) {
-		var skinIndex = celIndex - depth;
-		for (skinIndex; skinIndex < celIndex; skinIndex++) {
-			if (skinIndex >= 0) {
-				var imageData = bgctx.createImageData(background.width, background.height);
-				imageData.data.set(currentLayer[skinIndex].data);
-				setAlpha(imageData.data, .5);
-				bgctx.putImageData(imageData, 0, 0);
-			}
-		}		
+	// Highlight the new cel if this is the active layer
+	if (this.active) {
+		var $cels = this.$layer.find('.cel');
+		$cels.eq(this.celIndex).removeClass('active');
+		$cels.eq(targetIndex).addClass('active');
 	}
+
+	this.celIndex = targetIndex;
+};
+
+KGraph.TimelineLayer.prototype.addCel = function() {
+	var newCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+	this.cels.push(newCel);
+
+	var $lastCel = this.$layer.find('.cel').last();
+	var $newCel = $lastCel.clone(true);
+	$lastCel.after($newCel);
+}
+
+KGraph.TimelineLayer.prototype.cacheState = function() {
+	this.cachedStates.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
+};
+
+KGraph.TimelineLayer.prototype.clearCache = function() {
+	this.cachedStates = [];
+}
+
+KGraph.TimelineLayer.prototype.undo = function() {
+	if (this.cachedStates.length > 0) {
+		var state = this.cachedStates.pop();
+		this.ctx.putImageData(state, 0, 0);	
+	}
+}
+
+KGraph.TimelineLayer.prototype.startStroke = function(pageX, pageY) {
+	if (!this.brushDown) {
+		this.brushDown = true;
+		this.ctx.beginPath();
+		this.ctx.moveTo(pageX - this.offset.left, pageY - this.offset.top);
+	}
+	this.cacheState();
+};
+
+KGraph.TimelineLayer.prototype.strokeSegment = function(pageX, pageY) {
+	if (this.brushDown) {
+		var x = pageX - this.offset.left;
+		var y = pageY - this.offset.top;
+		this.ctx.lineTo(x, y);
+		this.ctx.stroke();
+	}
+};
+
+KGraph.TimelineLayer.prototype.closeStroke = function() {
+	this.ctx.stroke();
+	this.cachedStates.splice(-2, 2);
+	this.brushDown = false;
+	this.saveCel();	
+};
+
+KGraph.TimelineLayer.prototype.refreshSettings = function(settings) {
+	$.extend(this.ctx, settings);
+};
+
+KGraph.TimelineLayer.prototype.saveCel = function() {
+	var cel = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+	this.cels[this.celIndex] = cel;
+}
+
+
+
+
+$(document).ready(function() {
+
+	initializeCanvas();
+
+});
+
+
+function initializeCanvas() {
+	"use strict";
+
+	// Read onion skin settings from page
+	if ($('#onion-skin')[0].checked) {
+		var useOnionSkin = true;
+	}
+	else {
+		var useOnionSkin = false;
+	}
+
+	var onionSkinDepth = 1;
+
+	// Initialize new KGraph object and add canvas layers 
+	var $kgraph = $('#kgraph');
+	var kg = new KGraph($kgraph, useOnionSkin, onionSkinDepth);
+
+	var $canvas = $('#canvas');
+	var $layer = $('.layer').first();
+	kg.addLayer(0, $canvas, $layer);
+
+
+	// /* Brush settings */
+
+
+	// $canvas.on('mousewheel DOMMouseScroll', function(e) {
+	// 	if (e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0 && !$canvas.hasClass('select-mode')) {
+	// 		changeBrushSize(1);
+	// 	}
+	// 	else {
+	// 		changeBrushSize(-1);
+	// 	}
+	// });
+
+	// function changeBrushSize(n) {
+	// 	if (brushNo + n >= 0 && brushNo + n <= brushes.length - 1) {
+	// 		brushNo += n;
+	// 		var brush = brushes[brushNo];
+
+	// 		ctx.lineWidth = brush[0];
+
+	// 		$canvas.css('cursor', brush[1]);
+	// 	}
+	// }
+
+	// /* Keyboard shortcuts */
+
+	// $(document).on('keydown', function(e) {
+
+	// 	if (e.metaKey) {
+	// 		// ctrl + z
+	// 		if (e.which === 90 && cachedStates.length) {
+	// 			ctx.stroke();
+	// 			down = false;
+	// 			undo();				
+	// 		}
+
+	// 		// ctrl + x
+	// 		else if (e.which === 88) {
+	// 			ctx.clearRect(0, 0, canvas.width, canvas.height);		
+	// 		}
+	// 	}
+
+	// 	// ctrl + x (88)
+	// 	// ctrl + c (67)
+	// 	// ctrl + v (86)
+
+	// 	// s(elect)
+	// 	if (e.which == 83) {
+	// 		$canvas.toggleClass('select-mode');
+	// 	}
+		
+	// 	// left arrow
+	// 	if (e.which === 37 && celIndex > 0)
+	// 		switchCels(celIndex - 1, layerIndex);
+	// 	// right arrow
+	// 	if (e.which === 39 && celIndex < currentLayer.length - 1)
+	// 		switchCels(celIndex + 1, layerIndex);
+	// });
+
+	// /* Undo */
+
+	// $('#clear-canvas').on('click', function() {
+	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	// });
+
+	// function undo() {
+	// 	if (cachedStates) {
+	// 		var state = cachedStates.pop();
+
+	// 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	// 		ctx.putImageData(state, 0, 0);
+	// 	}
+	// }
+
+	// /* Adding and switching cels */
+
+	// $('.add-cel').on('click', function() {
+	// 	// add new cel to DOM
+	// 	var newCel = '<div class="cel"></div>'
+	// 	$(this).before(newCel);
+
+	// 	// switch cels
+	// 	var layer = $(this).closest('.layer').index();
+	// 	switchCels(currentLayer.length, layer);
+	// });
+
+	// $(document).on('click', '.cel', function() {
+	// 	var index = $(this).index();
+	// 	var layer = $(this).closest('.layer').index();
+	// 	if (index != celIndex || layer != currentLayer) {
+	// 		switchCels(index, layer);
+	// 	}
+	// });
+
+	// function switchCels(index, layer) {
+	// 	// save current cel
+	// 	currentLayer[celIndex] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+	// 	// clear canvas
+	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	// 	// clear cached states
+	// 	cachedStates = [];
+
+	// 	celIndex = index;
+	// 	layerIndex = layer;
+	// 	currentLayer = timeline[layerIndex];
+
+	// 	// Create new cel or load existing cel
+	// 	if (celIndex > currentLayer.length - 1) {
+	// 		currentLayer.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+	// 	}
+	// 	else {
+	// 		var imageData = currentLayer[celIndex];
+	// 		ctx.putImageData(imageData, 0, 0);			
+	// 	}
+
+	// 	if (useOnionSkin) {
+	// 		onionSkin(onionSkinDepth);
+	// 	}
+
+	// 	// hilight new cel
+	// 	$('.cel').removeClass('active');
+	// 	$('.layer').eq(layer).find('.cel').eq(index).addClass('active');
+	// }
+
+	// $('#onion-skin').on('change', function() {
+	// 	if (this.checked) {
+	// 		$('.background-layer').show();
+	// 		useOnionSkin = true;
+	// 		onionSkin(onionSkinDepth);
+	// 	}
+	// 	else {
+	// 		$('.background-layer').hide();
+	// 		useOnionSkin = false;
+	// 	}
+	// });
+
+	// function setAlpha(data, alpha) {
+	// 	for (var i = 3, l = data.length; i < l; i += 4) {
+	// 		data[i] *= alpha;
+	// 	}
+	// }
+
+	// function onionSkin(depth) {
+	// 	var skinIndex = celIndex - depth;
+	// 	for (skinIndex; skinIndex < celIndex; skinIndex++) {
+	// 		if (skinIndex >= 0) {
+	// 			var imageData = bgctx.createImageData(background.width, background.height);
+	// 			imageData.data.set(currentLayer[skinIndex].data);
+	// 			setAlpha(imageData.data, .5);
+	// 			bgctx.putImageData(imageData, 0, 0);
+	// 		}
+	// 	}		
+	// }
 }
 
 
