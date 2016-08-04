@@ -31,12 +31,16 @@ body {
 	cursor: crosshair;
 }
 
-.background-layer {
+.onion-skin {
 	position: absolute;
 	top: 0;
 	left: 0;
 	pointer-events: none;
 	z-index: -1;
+}
+
+.onion-skin .template {
+	display: none;
 }
 
 .flex-row {

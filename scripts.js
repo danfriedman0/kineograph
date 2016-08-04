@@ -5,13 +5,22 @@
 
 /* KGraph */
 
-function KGraph($kgraph, useOnionSkin, onionSkinDepth) {
+function KGraph($kgraph) {
 	this.$kgraph = $kgraph;
 	this.$canvasWrapper = $kgraph.find('#canvas-wrapper');
 	this.$color = $kgraph.find('.color');
 
-	this.useOnionSkin = useOnionSkin;
-	this.onionSkinDepth = onionSkinDepth;
+	// Read onion skin settings from page
+	if ($('#use-onion-skin')[0].checked) {
+		this.useOnionSkin = true;
+		this.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+	}
+	else {
+		this.useOnionSkin = false;
+		this.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+	}
+
+	this.onionSkinDepth = $('#onion-skin-depth').val();
 	
 	this.settings = {
 		strokeStyle: '#000',
@@ -38,7 +47,7 @@ function KGraph($kgraph, useOnionSkin, onionSkinDepth) {
 	this.activeLayer = null;
 	this.frameIndex = 0;
 
-	this.onionSkinLayers = [];
+	this.onionSkins = [];
 
 
 	/* Events */
@@ -76,12 +85,36 @@ function KGraph($kgraph, useOnionSkin, onionSkinDepth) {
 		var frameIndex = $(this).index();
 		me.changeFrame(frameIndex);
 	});
+
+	me.$kgraph.find('#use-onion-skin').on('change', function() {
+		if (this.checked) {
+			me.useOnionSkin = true;
+			me.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+			me.renderOnionSkin();
+		}
+		else {
+			me.useOnionSkin = false;
+			me.$kgraph.find('#onion-skin-depth').attr('disabled', true);
+			me.onionSkins.forEach(function(onionSkin) {
+				onionSkin.clear();
+			});
+		}
+	});
+
+	me.$kgraph.find('#onion-skin-depth').on('change', function() {
+		me.onionSkinDepth = $(this).val();
+		console.log('new depth: ' + me.onionSkinDepth);
+		me.onionSkins.forEach(function(onionSkin) {
+			onionSkin.clear();
+		});
+		me.renderOnionSkin();
+	});
 }
 
-KGraph.prototype.addLayer = function(index, $canvas, $layer) {
-	var newLayer = new KGraph.TimelineLayer(index, $canvas, $layer, this.settings);
+KGraph.prototype.addLayer = function($canvas, $layer) {
+	var newLayer = new KGraph.TimelineLayer($canvas, $layer, this.settings);
 	this.layers.push(newLayer);
-	this.changeLayer(index);
+	this.changeLayer(this.layers.length - 1);
 };
 
 KGraph.prototype.changeLayer = function(index) {
@@ -145,6 +178,10 @@ KGraph.prototype.changeFrame = function(frameIndex) {
 		layer.switchCel(frameIndex);
 	});
 	this.frameIndex = frameIndex;
+
+	if (this.useOnionSkin) {
+		this.renderOnionSkin();
+	}
 }
 
 KGraph.prototype.addFrame = function(layerIndex) {
@@ -154,15 +191,34 @@ KGraph.prototype.addFrame = function(layerIndex) {
 	this.changeFrame(this.frameIndex);
 }
 
+KGraph.prototype.addOnionSkin = function($onionSkin) {
+	var onionSkin = new KGraph.KCanvas($onionSkin, {});
+	this.onionSkins.push(onionSkin);
+}
+
+KGraph.prototype.renderOnionSkin = function() {
+	for (var i = 0; i < this.onionSkinDepth; i++) {
+		var os = this.onionSkins[i];
+		os.clear();
+		if (this.frameIndex - 1 - i >= 0) {
+			var imageData = this.activeLayer.cels[this.frameIndex - 1 - i];
+			var osImageData = os.ctx.createImageData(imageData.width, imageData.height);
+			osImageData.data.set(imageData.data);
+			os.setAlpha(osImageData.data, 0.5/(i+1));
+
+			os.drawCel(osImageData);
+		}
+	}
+}
+
 
 /* KGraph.KCanvas */
 
-KGraph.KCanvas = function(index, $canvas, settings) {
-	this.index = index;
+KGraph.KCanvas = function($canvas, settings) {
 	this.$canvas = $canvas;
 	this.offset = $canvas ? $canvas.offset() : null;
 	this.canvas = $canvas ? $canvas[0] : null;
-	this.ctx = $.extend(canvas.getContext('2d'), settings);
+	this.ctx = this.canvas ? $.extend(this.canvas.getContext('2d'), settings) : null;
 	this.active = true;
 }
 
@@ -189,10 +245,16 @@ KGraph.KCanvas.prototype.activate = function() {
 	}
 }
 
+KGraph.KCanvas.prototype.setAlpha = function(data, alpha) {
+	for (var i = 3; i < data.length; i += 4) {
+		data[i] *= alpha;
+	}
+}
+
 /* KGraph.TimelineLayer */
 
-KGraph.TimelineLayer = function(index, $canvas, $layer, settings) {
-	KGraph.KCanvas.call(this, index, $canvas, settings);
+KGraph.TimelineLayer = function($canvas, $layer, settings) {
+	KGraph.KCanvas.call(this, $canvas, settings);
 	this.cels = [];
 	this.$layer = $layer;		// DOM cels
 	this.celIndex = 0;
@@ -212,7 +274,9 @@ KGraph.TimelineLayer = function(index, $canvas, $layer, settings) {
 			me.startStroke(e.pageX, e.pageY);
 		})
 		.on('mousemove', function(e) {
-			me.strokeSegment(e.pageX, e.pageY);
+			if (me.brushDown) {
+				me.strokeSegment(e.pageX, e.pageY);		
+			}
 		})
 		.on('dblclick', function() {
 			me.closeStroke();
@@ -275,12 +339,8 @@ KGraph.TimelineLayer.prototype.startStroke = function(pageX, pageY) {
 };
 
 KGraph.TimelineLayer.prototype.strokeSegment = function(pageX, pageY) {
-	if (this.brushDown) {
-		var x = pageX - this.offset.left;
-		var y = pageY - this.offset.top;
-		this.ctx.lineTo(x, y);
-		this.ctx.stroke();
-	}
+	this.ctx.lineTo(pageX - this.offset.left, pageY - this.offset.top);
+	this.ctx.stroke();
 };
 
 KGraph.TimelineLayer.prototype.closeStroke = function() {
@@ -313,7 +373,7 @@ function initializeCanvas() {
 	"use strict";
 
 	// Read onion skin settings from page
-	if ($('#onion-skin')[0].checked) {
+	if ($('#use-onion-skin')[0].checked) {
 		var useOnionSkin = true;
 	}
 	else {
@@ -324,11 +384,15 @@ function initializeCanvas() {
 
 	// Initialize new KGraph object and add canvas layers 
 	var $kgraph = $('#kgraph');
-	var kg = new KGraph($kgraph, useOnionSkin, onionSkinDepth);
+	var kg = new KGraph($kgraph, useOnionSkin);
 
-	var $canvas = $('#canvas');
+	var $canvas = $('.canvas');
 	var $layer = $('.layer').first();
-	kg.addLayer(0, $canvas, $layer);
+	kg.addLayer($canvas, $layer);
+
+	$('.onion-skin').each(function() {
+		kg.addOnionSkin($(this));
+	});
 }
 
 
