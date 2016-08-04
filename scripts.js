@@ -13,14 +13,16 @@ function KGraph($kgraph) {
 	// Read onion skin settings from page
 	if ($('#use-onion-skin')[0].checked) {
 		this.useOnionSkin = true;
-		this.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+		this.$kgraph.find('.onion-skin-depth').attr('disabled', false);
 	}
 	else {
 		this.useOnionSkin = false;
-		this.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+		this.$kgraph.find('.onion-skin-depth').attr('disabled', true);
 	}
 
-	this.onionSkinDepth = $('#onion-skin-depth').val();
+	var $osDepth = $('.onion-skin-depth');
+	this.osDepthBack = $osDepth.first().val() * -1;
+	this.osDepthForward = $osDepth.last().val();
 	
 	this.settings = {
 		strokeStyle: '#000',
@@ -45,7 +47,7 @@ function KGraph($kgraph) {
 	
 	this.layers = [];
 	this.activeLayer = null;
-	this.frameIndex = 0;
+	this.currentFrameIndex = 0;
 
 	this.onionSkins = [];
 
@@ -82,28 +84,32 @@ function KGraph($kgraph) {
 	});
 
 	$(document).on('click', '.cel', function() {
-		var frameIndex = $(this).index();
-		me.changeFrame(frameIndex);
+		var currentFrameIndex = $(this).index();
+		me.changeFrame(currentFrameIndex);
 	});
 
 	me.$kgraph.find('#use-onion-skin').on('change', function() {
 		if (this.checked) {
 			me.useOnionSkin = true;
-			me.$kgraph.find('#onion-skin-depth').attr('disabled', false);
+			me.$kgraph.find('.onion-skin-depth').attr('disabled', false);
 			me.renderOnionSkin();
 		}
 		else {
 			me.useOnionSkin = false;
-			me.$kgraph.find('#onion-skin-depth').attr('disabled', true);
+			me.$kgraph.find('.onion-skin-depth').attr('disabled', true);
 			me.onionSkins.forEach(function(onionSkin) {
 				onionSkin.clear();
 			});
 		}
 	});
 
-	me.$kgraph.find('#onion-skin-depth').on('change', function() {
-		me.onionSkinDepth = $(this).val();
-		console.log('new depth: ' + me.onionSkinDepth);
+	me.$kgraph.find('.onion-skin-depth').on('change', function() {
+		if ($(this).hasClass('back')) {
+			me.osDepthBack = $(this).val() * -1;
+		}
+		else {
+			me.osDepthForward = $(this).val();
+		}
 		me.onionSkins.forEach(function(onionSkin) {
 			onionSkin.clear();
 		});
@@ -154,6 +160,7 @@ KGraph.prototype.handleKeypress = function(metaKey, key) {
 		if (key === 90) {
 			this.activeLayer.brushDown = false;
 			this.activeLayer.undo();
+			this.activeLayer.saveCel();
 		}
 
 		// ctrl + x
@@ -163,21 +170,21 @@ KGraph.prototype.handleKeypress = function(metaKey, key) {
 	}
 
 	// left arrow
-	if (key === 37 && this.frameIndex > 0) {
-		this.changeFrame(this.frameIndex - 1);
+	if (key === 37 && this.currentFrameIndex > 0) {
+		this.changeFrame(this.currentFrameIndex - 1);
 	}
 
 	// right arrow
-	else if (key === 39 && this.frameIndex < this.activeLayer.cels.length - 1) {
-		this.changeFrame(this.frameIndex + 1);
+	else if (key === 39 && this.currentFrameIndex < this.activeLayer.cels.length - 1) {
+		this.changeFrame(this.currentFrameIndex + 1);
 	}
 }
 
-KGraph.prototype.changeFrame = function(frameIndex) {
+KGraph.prototype.changeFrame = function(currentFrameIndex) {
 	this.layers.forEach(function(layer) {
-		layer.switchCel(frameIndex);
+		layer.switchCel(currentFrameIndex);
 	});
-	this.frameIndex = frameIndex;
+	this.currentFrameIndex = currentFrameIndex;
 
 	if (this.useOnionSkin) {
 		this.renderOnionSkin();
@@ -187,8 +194,8 @@ KGraph.prototype.changeFrame = function(frameIndex) {
 KGraph.prototype.addFrame = function(layerIndex) {
 	var layer = this.layers[layerIndex];
 	layer.addCel();
-	this.frameIndex = layer.cels.length - 1;
-	this.changeFrame(this.frameIndex);
+	this.currentFrameIndex = layer.cels.length - 1;
+	this.changeFrame(this.currentFrameIndex);
 }
 
 KGraph.prototype.addOnionSkin = function($onionSkin) {
@@ -197,17 +204,38 @@ KGraph.prototype.addOnionSkin = function($onionSkin) {
 }
 
 KGraph.prototype.renderOnionSkin = function() {
-	for (var i = 0; i < this.onionSkinDepth; i++) {
-		var os = this.onionSkins[i];
-		os.clear();
-		if (this.frameIndex - 1 - i >= 0) {
-			var imageData = this.activeLayer.cels[this.frameIndex - 1 - i];
-			var osImageData = os.ctx.createImageData(imageData.width, imageData.height);
-			osImageData.data.set(imageData.data);
-			os.setAlpha(osImageData.data, 0.5/(i+1));
+	
+	/* Render onion skins from previous cels (osDepthBack) and future cels (osDepthForward).
+	 * The variable osLayer keeps track of the HTML canvas layers */
+	for (var depth = this.osDepthBack, osLayer = 0; depth <= this.osDepthForward; depth++, osLayer++) {
+		
+		// Only render the onion skin if depth !== 0 (i.e., don't onion skin the current cel)
+		if (depth !== 0) {
 
-			os.drawCel(osImageData);
+			// Get a KCanvas object to draw the onion skin on
+			var os = this.onionSkins[osLayer];
+			os.clear();
+
+			// Find the cel to onion skin
+			var celIndex = this.currentFrameIndex + depth;
+			if (celIndex >= 0 && celIndex < this.activeLayer.length) {
+				
+				// Make a copy of the cel and lower the alpha channel
+				var imageData = this.activeLayer.cels[celIndex];
+				var osImageData = os.ctx.createImageData(imageData.width, imageData.height);
+				osImageData.data.set(imageData.data);
+
+				os.setAlpha(osImageData.data, 0.5/(Math.abs(depth)));
+
+				os.drawCel(osImageData);
+			}			
 		}
+		else {
+			// Decrement osLayer when depth === 0; otherwise we'll skip a KCanvas object and get
+			// an index error later
+			osLayer--;
+		}
+
 	}
 }
 
@@ -227,7 +255,6 @@ KGraph.KCanvas.prototype.clear = function() {
 };
 
 KGraph.KCanvas.prototype.drawCel = function(imageData) {
-	this.clear();
 	this.ctx.putImageData(imageData, 0, 0);
 };
 
@@ -246,7 +273,7 @@ KGraph.KCanvas.prototype.activate = function() {
 }
 
 KGraph.KCanvas.prototype.setAlpha = function(data, alpha) {
-	for (var i = 3; i < data.length; i += 4) {
+	for (var i = 3, l = data.length; i < l; i += 4) {
 		data[i] *= alpha;
 	}
 }
@@ -265,6 +292,8 @@ KGraph.TimelineLayer = function($canvas, $layer, settings) {
 	// add first cel
 	var firstCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
 	this.cels.push(firstCel);
+
+	this.length = 1;
 
 	// Events
 	var me = this;
@@ -295,6 +324,9 @@ KGraph.TimelineLayer.prototype.switchCel = function(targetIndex) {
 		this.clear();
 	}
 
+	// clear cache
+	this.clearCache();
+
 	// Highlight the new cel if this is the active layer
 	if (this.active) {
 		var $cels = this.$layer.find('.cel');
@@ -308,6 +340,7 @@ KGraph.TimelineLayer.prototype.switchCel = function(targetIndex) {
 KGraph.TimelineLayer.prototype.addCel = function() {
 	var newCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
 	this.cels.push(newCel);
+	this.length++;
 
 	var $lastCel = this.$layer.find('.cel').last();
 	var $newCel = $lastCel.clone(true);
