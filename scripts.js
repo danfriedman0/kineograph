@@ -426,6 +426,17 @@ function initializeCanvas() {
 	$('.onion-skin').each(function() {
 		kg.addOnionSkin($(this));
 	});
+
+
+	// initialize timeline UI
+	$('#playhead').draggable({
+		handle: '#playhead-grip',
+		axis: 'x',
+		scroll: true,
+		containment: '#timeline-inner',
+		grid: [24, 0],
+		cursor: 'grabbing'
+	});
 }
 
 

@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>Kineograph</title>
 	<link rel="stylesheet" href="style.css">
-<!-- 	<link href='https://fonts.googleapis.com/css?family=Mada' rel='stylesheet' type='text/css'> -->
+	<link href='https://fonts.googleapis.com/css?family=Mada' rel='stylesheet' type='text/css'>
 </head>
 <body>
 
@@ -75,35 +75,158 @@
 		</div>
 
 		<div id="timeline-container" class="timeline-container flex-row flex-stretch">
-			<div id="layer-navbar" class="timeline-row">
-				<div class="layer-nav">Layer 1</div>
-				<div class="layer-nav">
-					<a id="add-layer" class="small-text" href="#">New layer</a>
-				</div>
-			</div>
+
+			<table id="layer-navbar">
+				<tbody>
+					<td class="layer-cel"></td>
+					<td class="layer-cel">Layer 1</td>
+					<td class="layer-cel">Layer 2</td>
+					<td class="layer-cel">
+						<a id="add-layer" class="small-text" href="#">New layer</a>
+					</td>
+				</tbody>
+			</table>
 
 			<div id="timeline-inner">
 
-				<div class="layer flex-row timeline-row">
-					<div class="cel active"></div>
-					<div class="add-cel">
-						<a href="#">+</a>
-					</div>
+				<div id="playhead">
+					<div id="playhead-grip"></div>
+					<div id="playhead-line"></div>
 				</div>
 
-				<div class="layer template flex-row timeline-row">
-					<div class="cel active"></div>
-					<div class="add-cel">
-						<a href="#">+</a>
-					</div>
-				</div>
+				<table id="cel-table">
+					<tbody>
+						<tr id="ruler-top">
+							
+						</tr>
+						<tr id="ruler">
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">4</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">8</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">12</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">16</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">20</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+						</tr>
 
-			</div>
+						<tr class="cel-layer">
+							<td class="cel"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+						</tr>
+						<tr class="cel-layer">
+							<td class="cel"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+						</tr>
+					</tbody>
+				</table>
+
+			</div><!-- #timeline-inner -->
+
 		</div>
 
 	</div><!-- .kgraph-wrapper -->
 
 
 	<script src="jquery.min.js"></script>
+	<script src="jquery-ui.min.js"></script>
 	<script src="scripts.js"></script>
 </body>

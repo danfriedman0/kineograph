@@ -5,7 +5,7 @@
 
 body {
 	text-align: center;
-	font-family: sans-serif;
+	font-family: 'Mada', sans-serif;
 	background-color: white;
 }
 
@@ -23,6 +23,7 @@ body {
 	display: inline-block;
 	line-height: 0;
 	border: solid 2px darkslategray;
+	border-radius: 4px;
 	position: relative;
 	cursor: url(images/brushes/4.png) 2 2, pointer;
 }
@@ -50,6 +51,7 @@ body {
 .flex-column {
 	display: flex;
 	flex-flow: column;
+	margin: 5px;
 }
 
 .flex-stretch {
@@ -83,36 +85,23 @@ body {
 
 #timeline-container {
 	border: 2px solid darkslategray;
+	border-radius: 4px;
 	width: 640px;
+	padding-top: 5px;
 }
 
-#layer-nav {
-	list-style: none;
+.layer-nav {
+	height: 22px;
 }
 
 #timeline-inner {
 	width: 550px;
 	overflow: scroll;
+	position: relative;
 }
 
 .layer.template {
 	display: none;
-}
-
-.cel {
-	cursor: pointer;
-	width: 15px;
-	height: 15px;
-	border: 1px solid #333;
-	margin-right: 1px;
-	background-color: white;
-	flex-shrink: 0;
-	align-self: center;
-	border-radius: 2px;
-}
-
-.timeline-row {
-	margin: 5px;
 }
 
 .active {
@@ -129,12 +118,85 @@ body {
 	text-decoration: none;
 }
 
+.layer-cel {
+	display: block;
+	height: 25px;
+}
+
+#time-ruler {
+	position: relative;
+}
+
+#cel-table {
+	border-collapse: collapse;
+	margin: 1px 5px;
+}
+
+#cel-table td {
+	min-width: 21px;
+	height: 21px;
+}
+
+.cel {
+	border: 1px solid #000;
+	border-radius: 1px;
+	cursor: pointer;
+}
+
+.cel.blank {
+	border: 1px dotted rgba(0, 0, 0, 0.3);
+	cursor: auto;
+}
+
+.ruler-cel {
+	position: relative;
+}
 
 
+.dot-mark {
+	width: 3px;
+	height: 3px;
+	border-radius: 2px;
+	background-color: rgba(0, 0, 0, .8);
+	position: absolute;
+	left: -1px;
+}
 
+.number-mark {
+	width: 8px;
+	height: 8px;
+	position: absolute;
+	left: -3px;
+	bottom: 7px;
+	font-size: .7em;
+}
 
+#playhead {
+	position: absolute;
+	z-index: 10;
+	left: 0px;
+}
 
+#playhead-grip {
+	width: 9px;
+	height: 22px;
+	border: 1px solid #330000;
+	border-radius: 2px;
+	background-color: rgba(204, 0, 0, .3);
+	cursor: grab;
+}
 
+.ui-draggable-dragging #playhead-grip {
+	cursor: grabbing;
+}
+
+#playhead-line {
+	width: 1px;
+	height: 48px;
+	background-color: #cc0000;
+	position: absolute;
+	left: 4px;
+}
 
 
 
