@@ -5,11 +5,12 @@
 
 /* KGraph */
 
-function KGraph($kgraph) {
+function KGraph($kgraph, templates) {
 	this.$kgraph = $kgraph;
 	this.$canvasWrapper = $kgraph.find('#canvas-wrapper');
 	this.$frameNumber = $kgraph.find('#frame-number');
 	this.$playhead = $kgraph.find('#playhead');
+	this.$ruler = $kgraph.find('#ruler');
 
 	// Reset frameNumber
 	this.$frameNumber.val('1');
@@ -27,6 +28,8 @@ function KGraph($kgraph) {
 	var $osDepth = $('.onion-skin-depth');
 	this.osDepthBack = $osDepth.first().val() * -1;
 	this.osDepthForward = $osDepth.last().val();
+
+	this.templates = templates;
 	
 	this.settings = {
 		strokeStyle: '#000',
@@ -97,7 +100,7 @@ function KGraph($kgraph) {
 		me.changeFrame(newFrameIndex - 1);
 	});
 
-	me.$kgraph.find('.mark').on('click', function() {
+	$(document).on('click', '.mark', function() {
 		var newFrameIndex = $(this).index('.mark');
 		me.changeFrame(newFrameIndex);
 	});
@@ -239,8 +242,16 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 	}
 
 	// right arrow or d
-	else if ((key === 39 || key === 68) && currentFrameIndex < this.activeLayer.cels.length) {
-		this.changeFrame(currentFrameIndex + 1);
+	else if (key === 39 || key === 68) {
+
+		if (currentFrameIndex < this.activeLayer.cels.length) {
+			this.changeFrame(currentFrameIndex + 1);
+		}
+
+		// extend timeline grid if we're at the end
+		else if (currentFrameIndex === this.activeLayer.cels.length) {
+			this.extendTimelines();
+		}
 	}
 
 
@@ -322,6 +333,36 @@ KGraph.prototype.insertFrame = function(frameIndex) {
 KGraph.prototype.duplicateFrame = function(sourceFrameIndex, newFrameIndex) {
 	this.activeLayer.duplicateCel(sourceFrameIndex, newFrameIndex);
 	this.changeFrame(newFrameIndex);
+}
+
+
+/*** Timeline display */
+
+KGraph.prototype.extendTimelines = function(n) {
+	if (!n) {
+		n = 22;
+	}
+
+	var newCels = this.templates.cel.repeat(n);
+
+	this.layers.forEach(function(layer) {
+		layer.extendTimeline(newCels);
+	});
+
+	// build new ruler cels
+	var currentLength = this.$ruler.find('td').length;
+	var newRulerCels = '';
+
+	for (var i = currentLength, l = currentLength + n; i < l; i++) {
+		if ((i + 1) % 4 === 0) {
+			newRulerCels += this.templates.numberMark[0] + (i + 1) + this.templates.numberMark[1];
+		} 
+		else {
+			newRulerCels += this.templates.dotMark;
+		}
+	}
+
+	this.$ruler.append(newRulerCels);
 }
 
 
@@ -600,6 +641,10 @@ KGraph.TimelineLayer.prototype.clearCel = function(celIndex) {
 	this.$layer.find('.cel').eq(celIndex).removeClass('filled').addClass('blank');
 }
 
+KGraph.TimelineLayer.prototype.extendTimeline = function(newCels) {
+	this.$layer.find('.cel').last().after(newCels);
+}
+
 /*** Copying and pasting cels */
 
 KGraph.TimelineLayer.prototype.copyCel = function(celIndex, bCut) {
@@ -675,30 +720,27 @@ KGraph.TimelineLayer.prototype.refreshSettings = function(settings) {
 /*************************************     -     ***************************************************/
 /***************************************************************************************************/
 
-
-$(document).ready(function() {
-
-	initializeCanvas();
-
-});
-
+function objToHtmlString($obj)  {
+	return $('<div>').append($obj.clone()).remove().html();
+}
 
 function initializeCanvas() {
 	"use strict";
 
-	// Read onion skin settings from page
-	if ($('#use-onion-skin')[0].checked) {
-		var useOnionSkin = true;
-	}
-	else {
-		var useOnionSkin = false;
-	}
+	// Get timeline templates
+	var $cel = $('.cel').eq(1);
+	var $dotMark = $('.ruler-cel').eq(0);
+	var $numberMark = $('.ruler-cel').eq(3);
 
-	var onionSkinDepth = 1;
+	var templates = {
+		cel: objToHtmlString($cel),
+		dotMark: objToHtmlString($dotMark),
+		numberMark: objToHtmlString($numberMark).split(/\d+/)
+	};
 
 	// Initialize new KGraph object and add canvas layers 
 	var $kgraph = $('#kgraph');
-	var kg = new KGraph($kgraph, useOnionSkin);
+	var kg = new KGraph($kgraph, templates);
 
 	var $canvas = $('.canvas');
 	var $layer = $('.cel-layer').first();
@@ -725,6 +767,12 @@ function initializeCanvas() {
 	});
 
 }
+
+$(document).ready(function() {
+
+	initializeCanvas();
+
+});
 
 
 
