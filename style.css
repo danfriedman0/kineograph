@@ -13,6 +13,8 @@ body {
 	font-size: .8em;
 }
 
+/* Position kgraph divs */
+
 #kgraph {
 	display: inline-flex;
 	flex-direction: column;
@@ -25,11 +27,7 @@ body {
 	border: solid 2px darkslategray;
 	border-radius: 4px;
 	position: relative;
-	cursor: url(images/brushes/4.png) 2 2, pointer;
-}
-
-#canvas.select-mode {
-	cursor: crosshair;
+	cursor: url(images/cursors/brushes/4.png) 2 2, pointer;
 }
 
 .onion-skin {
@@ -43,6 +41,8 @@ body {
 .onion-skin .template {
 	display: none;
 }
+
+/* General formatting */
 
 .flex-row {
 	display: flex;
@@ -61,6 +61,8 @@ body {
 .flex-item-left {
 	margin-right: 5px;
 }
+
+/* Colors */
 
 .color {
 	width: 25px;
@@ -90,9 +92,17 @@ body {
 	padding-top: 5px;
 }
 
-.layer-nav {
-	height: 22px;
+.timeline-row {
+	height: 24px;
 }
+
+/*** Layer navigation */
+
+#layer-navbar {
+	margin-top: 24px;
+}
+
+/*** Inner timeline */
 
 #timeline-inner {
 	width: 550px;
@@ -100,36 +110,11 @@ body {
 	position: relative;
 }
 
-.layer.template {
-	display: none;
-}
-
-.active {
-	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-	border: 1px solid rgba(81, 203, 238, 1);
-}
-
-.add-cel {
-	margin: 0 5px;
-	align-self: center;
-}
-
-.add-cel a {
-	text-decoration: none;
-}
-
-.layer-cel {
-	display: block;
-	height: 25px;
-}
-
-#time-ruler {
-	position: relative;
-}
+	/* Cels */
 
 #cel-table {
 	border-collapse: collapse;
-	margin: 1px 5px;
+	margin: 0 5px;
 }
 
 #cel-table td {
@@ -137,22 +122,52 @@ body {
 	height: 21px;
 }
 
+.cel-layer.template {
+	display: none;
+}
+
 .cel {
-	border: 1px solid #000;
+	border: 1px solid rgba(0, 0, 0, 0.1);
 	border-radius: 1px;
 	cursor: pointer;
+	transition: all .2s;
 }
 
 .cel.blank {
-	border: 1px dotted rgba(0, 0, 0, 0.3);
-	cursor: auto;
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.cel.filled {
+	background-color: #fff;
+}
+
+.cel.blank:hover {
+	background-color: rgba(255,255,255, 0.9);
+}
+
+.cel.active {
+	border: 1px solid rgba(81, 203, 238, 1);
+	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+}
+
+.cel.blank.active {
+	background-color: white;
+}
+
+	/* Time ruler */
+
+#time-ruler {
+	position: relative;
 }
 
 .ruler-cel {
 	position: relative;
 }
 
-
+.mark {
+	cursor: pointer;
+}
+	
 .dot-mark {
 	width: 3px;
 	height: 3px;
@@ -171,6 +186,8 @@ body {
 	font-size: .7em;
 }
 
+	/* Playhead */
+
 #playhead {
 	position: absolute;
 	z-index: 10;
@@ -180,20 +197,22 @@ body {
 #playhead-grip {
 	width: 9px;
 	height: 22px;
-	border: 1px solid #330000;
+	border: 1px solid darkslategray;
 	border-radius: 2px;
-	background-color: rgba(204, 0, 0, .3);
+	background-color: rgba(135, 206, 250, 0.2);
 	cursor: grab;
+	cursor: -webkit-grab;
 }
 
 .ui-draggable-dragging #playhead-grip {
 	cursor: grabbing;
+	cursor: -webkit-grabbing;
 }
 
 #playhead-line {
 	width: 1px;
-	height: 48px;
-	background-color: #cc0000;
+	height: 24px;
+	background-color: darkslategray;
 	position: absolute;
 	left: 4px;
 }

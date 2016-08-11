@@ -8,7 +8,11 @@
 function KGraph($kgraph) {
 	this.$kgraph = $kgraph;
 	this.$canvasWrapper = $kgraph.find('#canvas-wrapper');
-	this.$color = $kgraph.find('.color');
+	this.$frameNumber = $kgraph.find('#frame-number');
+	this.$playhead = $kgraph.find('#playhead');
+
+	// Reset frameNumber
+	this.$frameNumber.val('1');
 
 	// Read onion skin settings from page
 	if ($('#use-onion-skin')[0].checked) {
@@ -32,15 +36,15 @@ function KGraph($kgraph) {
 	};
 
 	this.brushes = [
-		[1, 'url(images/brushes/4.png) 2 2, pointer'],
-		[2, 'url(images/brushes/8.png) 4 4, pointer'],
-		[3, 'url(images/brushes/12.png) 6 6, pointer'],
-		[4, 'url(images/brushes/16.png) 8 8, pointer'],
-		[6, 'url(images/brushes/24.png) 12 12, pointer'],
-		[8, 'url(images/brushes/32.png) 16 16, pointer'],
-		[12, 'url(images/brushes/48.png) 24 24, pointer'],
-		[16, 'url(images/brushes/64.png) 32 32, pointer'],
-		[24, 'url(images/brushes/96.png) 48 48, pointer']
+		[1, 'url(images/cursors/brushes/4.png) 2 2, pointer'],
+		[2, 'url(images/cursors/brushes/8.png) 4 4, pointer'],
+		[3, 'url(images/cursors/brushes/12.png) 6 6, pointer'],
+		[4, 'url(images/cursors/brushes/16.png) 8 8, pointer'],
+		[6, 'url(images/cursors/brushes/24.png) 12 12, pointer'],
+		[8, 'url(images/cursors/brushes/32.png) 16 16, pointer'],
+		[12, 'url(images/cursors/brushes/48.png) 24 24, pointer'],
+		[16, 'url(images/cursors/brushes/64.png) 32 32, pointer'],
+		[24, 'url(images/cursors/brushes/96.png) 48 48, pointer']
 	];
 
 	this.brushNo = 0;
@@ -48,6 +52,7 @@ function KGraph($kgraph) {
 	this.layers = [];
 	this.activeLayer = null;
 	this.currentFrameIndex = 0;
+	this.lastFrameIndex = 0;
 
 	this.onionSkins = [];
 
@@ -55,7 +60,13 @@ function KGraph($kgraph) {
 	/* Events */
 	var me = this;
 
-	me.$color.on('click', function(e) {
+	$(document).on('keydown', function(e) {
+		me.handleKeypress(e.metaKey, e.shiftKey, e.which);
+	});
+
+	/*** Brush settings */
+
+	me.$kgraph.find('.color').on('click', function(e) {
 		var color = $(this).css('background-color');
 		if (color) {
 			me.changeColor(color);
@@ -74,9 +85,7 @@ function KGraph($kgraph) {
 		}
 	});
 
-	$(document).on('keydown', function(e) {
-		me.handleKeypress(e.metaKey, e.which);
-	});
+	/*** Frame navigation */
 
 	$(document).on('click', '.add-cel', function() {
 		var layerIndex = $(this).index('.add-cel');
@@ -87,6 +96,18 @@ function KGraph($kgraph) {
 		var currentFrameIndex = $(this).index();
 		me.changeFrame(currentFrameIndex);
 	});
+
+	me.$frameNumber.on('change', function() {
+		var newFrameIndex = this.value;
+		me.changeFrame(newFrameIndex - 1, true);
+	});
+
+	me.$kgraph.find('.mark').on('click', function() {
+		var newFrameIndex = $(this).index('.mark');
+		me.changeFrame(newFrameIndex, true);
+	});
+
+	/*** Onion skin */
 
 	me.$kgraph.find('#use-onion-skin').on('change', function() {
 		if (this.checked) {
@@ -117,19 +138,51 @@ function KGraph($kgraph) {
 	});
 }
 
-KGraph.prototype.addLayer = function($canvas, $layer) {
-	var newLayer = new KGraph.TimelineLayer($canvas, $layer, this.settings);
-	this.layers.push(newLayer);
-	this.changeLayer(this.layers.length - 1);
-};
+KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
+	if (metaKey) {
+		// ctrl + z
+		if (key === 90) {
+			this.activeLayer.brushDown = false;
+			this.activeLayer.undo();
+			this.activeLayer.saveCel();
+		}
 
-KGraph.prototype.changeLayer = function(index) {
-	if (this.activeLayer) {
-		this.activeLayer.deactivate();
-		this.activeLayer.refreshSettings(this.settings);
+		// ctrl + x
+		else if (key === 88) {
+			this.activeLayer.clear();
+		}
 	}
-	this.activeLayer = this.layers[index];
-};
+
+	else if (shiftKey) {
+		// shift + f: insert duplicate frame (i.e., copy forward)
+		if (key === 70) {
+			this.duplicateFrame(this.currentFrameIndex, this.currentFrameIndex + 1);
+		}
+	}
+
+	// insert (f)rame
+	else if (key === 70) {
+		this.insertFrame(this.currentFrameIndex);
+	}
+
+	// left arrow
+	else if (key === 37 && this.currentFrameIndex > 0) {
+		this.changeFrame(this.currentFrameIndex - 1, true);
+	}
+
+	// right arrow
+	else if (key === 39 && this.currentFrameIndex < this.lastFrameIndex) {
+		this.changeFrame(this.currentFrameIndex + 1, true);
+	}
+
+	else {
+		console.log(this.currentFrameIndex, this.lastFrameIndex);
+	}
+
+
+}
+
+/*** Brush settings */
 
 KGraph.prototype.changeColor = function(color) {
 	if (color === 'eraser') {
@@ -154,48 +207,52 @@ KGraph.prototype.changeBrushSize = function(n) {
 	}
 };
 
-KGraph.prototype.handleKeypress = function(metaKey, key) {
-	if (metaKey) {
-		// ctrl + z
-		if (key === 90) {
-			this.activeLayer.brushDown = false;
-			this.activeLayer.undo();
-			this.activeLayer.saveCel();
-		}
+/*** Layer navigation */
 
-		// ctrl + x
-		else if (key === 88) {
-			this.activeLayer.clear();
-		}
+KGraph.prototype.addLayer = function($canvas, $layer) {
+	var newLayer = new KGraph.TimelineLayer($canvas, $layer, this.settings);
+	this.layers.push(newLayer);
+	this.changeLayer(this.layers.length - 1);
+};
+
+KGraph.prototype.changeLayer = function(index) {
+	if (this.activeLayer) {
+		this.activeLayer.deactivate();
+		this.activeLayer.refreshSettings(this.settings);
 	}
+	this.activeLayer = this.layers[index];
+};
 
-	// left arrow
-	if (key === 37 && this.currentFrameIndex > 0) {
-		this.changeFrame(this.currentFrameIndex - 1);
-	}
 
-	// right arrow
-	else if (key === 39 && this.currentFrameIndex < this.activeLayer.cels.length - 1) {
-		this.changeFrame(this.currentFrameIndex + 1);
-	}
-}
+/*** Frame navigation */
 
-KGraph.prototype.changeFrame = function(currentFrameIndex) {
+KGraph.prototype.changeFrame = function(newFrameIndex, bMovePlayhead) {
 	this.layers.forEach(function(layer) {
-		layer.switchCel(currentFrameIndex);
+		layer.switchCel(newFrameIndex);
 	});
-	this.currentFrameIndex = currentFrameIndex;
+	this.currentFrameIndex = newFrameIndex;
+
+	// Update frame number display
+	this.$frameNumber.val(newFrameIndex + 1);
+
+	if (bMovePlayhead) {
+		this.movePlayhead(newFrameIndex);
+	}
 
 	if (this.useOnionSkin) {
 		this.renderOnionSkin();
 	}
 }
 
-KGraph.prototype.addFrame = function(layerIndex) {
-	var layer = this.layers[layerIndex];
-	layer.addCel();
-	this.currentFrameIndex = layer.cels.length - 1;
-	this.changeFrame(this.currentFrameIndex);
+KGraph.prototype.insertFrame = function(frameIndex) {
+	this.layers.forEach(function(layer) {
+		layer.insertCel(frameIndex);
+	});
+	this.changeFrame(frameIndex, true);
+
+	if (frameIndex > this.lastFrameIndex) {
+		this.lastFrameIndex = frameIndex;
+	}
 }
 
 KGraph.prototype.addOnionSkin = function($onionSkin) {
@@ -203,10 +260,25 @@ KGraph.prototype.addOnionSkin = function($onionSkin) {
 	this.onionSkins.push(onionSkin);
 }
 
+KGraph.prototype.duplicateFrame = function(sourceFrameIndex, newFrameIndex) {
+	this.activeLayer.duplicateCel(sourceFrameIndex, newFrameIndex);
+	this.changeFrame(newFrameIndex, true);
+}
+
+
+/*** Playback */
+
+KGraph.prototype.movePlayhead = function(newFrameIndex) {
+	this.$playhead.css('left', newFrameIndex * 24);
+}
+
+
+/*** Onion skin */
+
 KGraph.prototype.renderOnionSkin = function() {
 	
 	/* Render onion skins from previous cels (osDepthBack) and future cels (osDepthForward).
-	 * The variable osLayer keeps track of the HTML canvas layers */
+	 * osLayer keeps track of the HTML canvas layers */
 	for (var depth = this.osDepthBack, osLayer = 0; depth <= this.osDepthForward; depth++, osLayer++) {
 		
 		// Only render the onion skin if depth !== 0 (i.e., don't onion skin the current cel)
@@ -218,7 +290,7 @@ KGraph.prototype.renderOnionSkin = function() {
 
 			// Find the cel to onion skin
 			var celIndex = this.currentFrameIndex + depth;
-			if (celIndex >= 0 && celIndex < this.activeLayer.length) {
+			if (celIndex >= 0 && celIndex < this.lastFrameIndex) {
 				
 				// Make a copy of the cel and lower the alpha channel
 				var imageData = this.activeLayer.cels[celIndex];
@@ -278,27 +350,32 @@ KGraph.KCanvas.prototype.setAlpha = function(data, alpha) {
 	}
 }
 
+KGraph.KCanvas.prototype.copyImageData = function(imageData) {
+	var copy = this.ctx.createImageData(imageData.width, imageData.height);
+	copy.data.set(imageData.data);
+	return copy;
+}
+
 /* KGraph.TimelineLayer */
 
 KGraph.TimelineLayer = function($canvas, $layer, settings) {
 	KGraph.KCanvas.call(this, $canvas, settings);
 	this.cels = [];
-	this.$layer = $layer;		// DOM cels
+	this.$layer = $layer;		// DOM cel layer
 	this.celIndex = 0;
 	this.hidden = false;
 	this.brushDown = false;
 	this.cachedStates = [];
+	this.clipboard = null;
 
 	// add first cel
 	var firstCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
 	this.cels.push(firstCel);
 
-	this.length = 1;
-
 	// Events
 	var me = this;
 
-	this.$canvas
+	me.$canvas
 		.on('click', function(e) {
 			me.startStroke(e.pageX, e.pageY);
 		})
@@ -310,41 +387,54 @@ KGraph.TimelineLayer = function($canvas, $layer, settings) {
 		.on('dblclick', function() {
 			me.closeStroke();
 		});
+
+	/* Insert cel */
+
+	me.$layer.find('.cel').on('dblclick', function(e) {
+		me.insertCel($(this).index());
+	});
+
+
+	/* Drag and drop */
+
+	me.$layer.find('.cel')
+		.on('mousedown', function(e) {
+			me.$layer.find('.cel').css('cursor', 'url(images/cursors/grab_cel.png) 10 10, pointer');
+			var celIndex = $(this).index();
+			
+			// shift + click duplicates the cel (copy and paste)
+			if (e.shiftKey) {
+				me.copyCel(celIndex, true);
+			}
+
+			// simple click moves it (cut and paste)
+			else {
+				me.copyCel(celIndex, false);
+			}
+		})
+		.on('mouseup', function(e) {
+			me.$layer.find('.cel').css('cursor', 'pointer');
+			var newCelIndex = $(this).index();
+			me.pasteCel(newCelIndex);
+		});
+
+	// Restore the original cel if the drag and drop is aborted
+	me.$layer.on('mouseleave', function() {
+		me.$layer.find('.cel').css('cursor', 'pointer');
+		if (me.clipboard && !me.clipboard.pasted && me.clipboard.cut) {
+			me.pasteCel(me.clipboard.celIndex);
+		}
+	});
 }
 
 KGraph.TimelineLayer.prototype = new KGraph.KCanvas();
 
-KGraph.TimelineLayer.prototype.switchCel = function(targetIndex) {
-	// Look for the target cel in memory and draw it if it exists
-	var targetCel = this.cels[targetIndex];
-	if (targetCel) {
-		this.drawCel(this.cels[targetIndex]);
-	}
-	else {
-		this.clear();
-	}
 
-	// clear cache
-	this.clearCache();
+/*** Cel memory */
 
-	// Highlight the new cel if this is the active layer
-	if (this.active) {
-		var $cels = this.$layer.find('.cel');
-		$cels.eq(this.celIndex).removeClass('active');
-		$cels.eq(targetIndex).addClass('active');
-	}
-
-	this.celIndex = targetIndex;
-};
-
-KGraph.TimelineLayer.prototype.addCel = function() {
-	var newCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
-	this.cels.push(newCel);
-	this.length++;
-
-	var $lastCel = this.$layer.find('.cel').last();
-	var $newCel = $lastCel.clone(true);
-	$lastCel.after($newCel);
+KGraph.TimelineLayer.prototype.saveCel = function() {
+	var cel = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+	this.cels[this.celIndex] = cel;
 }
 
 KGraph.TimelineLayer.prototype.cacheState = function() {
@@ -361,6 +451,86 @@ KGraph.TimelineLayer.prototype.undo = function() {
 		this.ctx.putImageData(state, 0, 0);	
 	}
 }
+
+
+/*** Timeline navigation */
+
+KGraph.TimelineLayer.prototype.switchCel = function(newCelIndex) {
+	// Look for the new cel in memory and draw it if it exists
+	var newCel = this.cels[newCelIndex];
+	if (newCel) {
+		this.drawCel(this.cels[newCelIndex]);
+	}
+	else {
+		this.clear();
+	}
+
+	// clear cache
+	this.clearCache();
+
+	// Highlight the new cel if this is the active layer
+	if (this.active) {
+		var $cels = this.$layer.find('.cel');
+		$cels.eq(this.celIndex).removeClass('active');
+		$cels.eq(newCelIndex).addClass('active');
+	}
+
+	this.celIndex = newCelIndex;
+};
+
+/*** Adding and removing cels */
+
+KGraph.TimelineLayer.prototype.insertCel = function(newCelIndex, newCel) {
+	if (!newCel) {
+		newCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+	}
+
+	if (newCelIndex > this.cels.length) {
+		this.cels.length = newCelIndex + 1;
+		this.cels[newCelIndex] = newCel;
+	}
+	else {
+		this.cels.splice(newCelIndex, 0, newCel);
+	}
+
+	this.$layer.find('.cel').eq(newCelIndex).removeClass('blank').addClass('filled');
+
+}
+
+KGraph.TimelineLayer.prototype.removeCel = function(celIndex) {
+	this.cels[celIndex] = null;
+
+	if (celIndex === this.celIndex) {
+		this.clear();
+	}
+}
+
+KGraph.TimelineLayer.prototype.duplicateCel = function(sourceCelIndex, newCelIndex) {
+	var newCel = this.copyImageData(this.cels[sourceCelIndex]);
+	this.insertCel(newCelIndex, newCel);
+}
+
+KGraph.TimelineLayer.prototype.copyCel = function(celIndex, bCut) {
+	this.clipboard = {
+		celIndex: celIndex,
+		cel: this.cels[celIndex],
+		cut: bCut,
+		pasted: false
+	};
+
+	// if (bCut) {
+	// 	this.cels.splice(celIndex, 1);
+	// }
+}
+
+KGraph.TimelineLayer.prototype.pasteCel = function(newCelIndex) {
+	var cel = this.clipboard.cel;
+	this.insertCel(newCelIndex, cel);
+	this.clipboard.pasted = true;
+}
+
+
+/*** Drawing functions */
 
 KGraph.TimelineLayer.prototype.startStroke = function(pageX, pageY) {
 	if (!this.brushDown) {
@@ -387,10 +557,6 @@ KGraph.TimelineLayer.prototype.refreshSettings = function(settings) {
 	$.extend(this.ctx, settings);
 };
 
-KGraph.TimelineLayer.prototype.saveCel = function() {
-	var cel = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-	this.cels[this.celIndex] = cel;
-}
 
 
 
@@ -420,13 +586,14 @@ function initializeCanvas() {
 	var kg = new KGraph($kgraph, useOnionSkin);
 
 	var $canvas = $('.canvas');
-	var $layer = $('.layer').first();
+	var $layer = $('.cel-layer').first();
 	kg.addLayer($canvas, $layer);
 
 	$('.onion-skin').each(function() {
 		kg.addOnionSkin($(this));
 	});
 
+	var CEL_WIDTH = $('.ruler-cel').outerWidth();
 
 	// initialize timeline UI
 	$('#playhead').draggable({
@@ -434,9 +601,14 @@ function initializeCanvas() {
 		axis: 'x',
 		scroll: true,
 		containment: '#timeline-inner',
-		grid: [24, 0],
-		cursor: 'grabbing'
+		cursor: 'grabbing',
+		grid: [CEL_WIDTH, 0],
+		stop: function() {
+			var frameIndex = parseInt($(this).css('left')) / CEL_WIDTH;
+			kg.changeFrame(frameIndex);
+		}
 	});
+
 }
 
 

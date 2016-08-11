@@ -72,34 +72,34 @@
 					<option value="5">+5</option>
 				</select>
 			</div>
+			<div>
+				<label for="frame-number" class="small-text">frame:</label>
+				<input id="frame-number" type="textbox" size="3" value="1">
+			</div>
 		</div>
 
 		<div id="timeline-container" class="timeline-container flex-row flex-stretch">
 
-			<table id="layer-navbar">
-				<tbody>
-					<td class="layer-cel"></td>
-					<td class="layer-cel">Layer 1</td>
-					<td class="layer-cel">Layer 2</td>
-					<td class="layer-cel">
+			<div id="layer-navbar">
+				<div class="timeline-row">
+					<div class="content">Layer 1</div>
+				</div>
+				<div class="timeline-row">
+					<div class="content">
 						<a id="add-layer" class="small-text" href="#">New layer</a>
-					</td>
-				</tbody>
-			</table>
+					</div>
+				</div>
+			</div>
 
 			<div id="timeline-inner">
 
 				<div id="playhead">
 					<div id="playhead-grip"></div>
-					<div id="playhead-line"></div>
 				</div>
 
 				<table id="cel-table">
 					<tbody>
-						<tr id="ruler-top">
-							
-						</tr>
-						<tr id="ruler">
+						<tr id="ruler" class="timeline-row">
 							<td class="ruler-cel">
 								<div class="mark dot-mark"></div>
 							</td>
@@ -168,8 +168,8 @@
 							</td>
 						</tr>
 
-						<tr class="cel-layer">
-							<td class="cel"></td>
+						<tr class="cel-layer timeline-row">
+							<td class="cel filled active"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
@@ -192,8 +192,8 @@
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
 						</tr>
-						<tr class="cel-layer">
-							<td class="cel"></td>
+						<tr class="cel-layer timeline-row template">
+							<td class="cel filled"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
@@ -223,7 +223,7 @@
 
 		</div>
 
-	</div><!-- .kgraph-wrapper -->
+	</div><!-- #kgraph -->
 
 
 	<script src="jquery.min.js"></script>
