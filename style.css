@@ -13,6 +13,8 @@ body {
 	font-size: .8em;
 }
 
+/* Position kgraph divs */
+
 #kgraph {
 	display: inline-flex;
 	flex-direction: column;
@@ -23,12 +25,10 @@ body {
 	display: inline-block;
 	line-height: 0;
 	border: solid 2px darkslategray;
+	border-radius: 4px;
 	position: relative;
-	cursor: url(images/brushes/4.png) 2 2, pointer;
-}
-
-#canvas.select-mode {
-	cursor: crosshair;
+	cursor: url(images/cursors/brushes/4.png) 2 2, pointer;
+	text-align: left;
 }
 
 .onion-skin {
@@ -43,6 +43,8 @@ body {
 	display: none;
 }
 
+/* General formatting */
+
 .flex-row {
 	display: flex;
 }
@@ -50,6 +52,7 @@ body {
 .flex-column {
 	display: flex;
 	flex-flow: column;
+	margin: 5px;
 }
 
 .flex-stretch {
@@ -59,6 +62,8 @@ body {
 .flex-item-left {
 	margin-right: 5px;
 }
+
+/* Colors */
 
 .color {
 	width: 25px;
@@ -83,58 +88,136 @@ body {
 
 #timeline-container {
 	border: 2px solid darkslategray;
+	border-radius: 4px;
 	width: 640px;
+	padding: 5px;
 }
 
-#layer-nav {
-	list-style: none;
+.timeline-row {
+	height: 24px;
 }
+
+/*** Layer navigation */
+
+#layer-navbar {
+	margin-top: 24px;
+}
+
+/*** Inner timeline */
 
 #timeline-inner {
 	width: 550px;
 	overflow: scroll;
+	position: relative;
 }
 
-.layer.template {
+	/* Cels */
+
+#cel-table {
+	border-collapse: collapse;
+	margin: 0 5px;
+}
+
+#cel-table td {
+	min-width: 21px;
+	height: 21px;
+}
+
+.cel-layer.template {
 	display: none;
 }
 
 .cel {
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 1px;
 	cursor: pointer;
-	width: 15px;
-	height: 15px;
-	border: 1px solid #333;
-	margin-right: 1px;
-	background-color: white;
-	flex-shrink: 0;
-	align-self: center;
-	border-radius: 2px;
+	transition: all .2s;
 }
 
-.timeline-row {
-	margin: 5px;
+.cel.blank {
+	background-color: rgba(0, 0, 0, 0.1);
 }
 
-.active {
-	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+.cel.filled {
+	background-color: #fff;
+}
+
+.cel.blank:hover {
+	background-color: rgba(255,255,255, 0.9);
+}
+
+.cel.active {
 	border: 1px solid rgba(81, 203, 238, 1);
+	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+	z-index: 100;
 }
 
-.add-cel {
-	margin: 0 5px;
-	align-self: center;
+.cel.blank.active {
+	background-color: white;
 }
 
-.add-cel a {
-	text-decoration: none;
+	/* Time ruler */
+
+#time-ruler {
+	position: relative;
 }
 
+.ruler-cel {
+	position: relative;
+}
 
+.mark {
+	cursor: pointer;
+}
+	
+.dot-mark {
+	width: 3px;
+	height: 3px;
+	border-radius: 2px;
+	background-color: rgba(0, 0, 0, .8);
+	position: absolute;
+	left: -1px;
+}
 
+.number-mark {
+	width: 8px;
+	height: 8px;
+	position: absolute;
+	left: -3px;
+	bottom: 7px;
+	font-size: .7em;
+}
 
+	/* Playhead */
 
+#playhead {
+	position: absolute;
+	z-index: 10;
+	left: 0px;
+}
 
+#playhead-grip {
+	width: 9px;
+	height: 22px;
+	border: 1px solid darkslategray;
+	border-radius: 2px;
+	background-color: rgba(135, 206, 250, 0.2);
+	cursor: grab;
+	cursor: -webkit-grab;
+}
 
+.ui-draggable-dragging #playhead-grip {
+	cursor: grabbing;
+	cursor: -webkit-grabbing;
+}
+
+#playhead-line {
+	width: 1px;
+	height: 24px;
+	background-color: darkslategray;
+	position: absolute;
+	left: 4px;
+}
 
 
 
