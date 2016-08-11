@@ -28,6 +28,7 @@ body {
 	border-radius: 4px;
 	position: relative;
 	cursor: url(images/cursors/brushes/4.png) 2 2, pointer;
+	text-align: left;
 }
 
 .onion-skin {
@@ -89,7 +90,7 @@ body {
 	border: 2px solid darkslategray;
 	border-radius: 4px;
 	width: 640px;
-	padding-top: 5px;
+	padding: 5px;
 }
 
 .timeline-row {
@@ -148,6 +149,7 @@ body {
 .cel.active {
 	border: 1px solid rgba(81, 203, 238, 1);
 	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+	z-index: 100;
 }
 
 .cel.blank.active {

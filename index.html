@@ -56,8 +56,8 @@
 				<input id="use-onion-skin" type="checkbox">
 				<label for="use-onion-skin" class="small-text">onion skin</label>
 				<select class="onion-skin-depth back" disabled>
-					<option value="0" selected>0</option>
-					<option value="1">-1</option>
+					<option value="0">0</option>
+					<option value="1" selected>-1</option>
 					<option value="2">-2</option>
 					<option value="3">-3</option>
 					<option value="4">-4</option>
@@ -84,17 +84,18 @@
 				<div class="timeline-row">
 					<div class="content">Layer 1</div>
 				</div>
-				<div class="timeline-row">
+<!-- 				<div class="timeline-row">
 					<div class="content">
 						<a id="add-layer" class="small-text" href="#">New layer</a>
 					</div>
-				</div>
+				</div> -->
 			</div>
 
 			<div id="timeline-inner">
 
 				<div id="playhead">
 					<div id="playhead-grip"></div>
+					<div id="playhead-line"></div>
 				</div>
 
 				<table id="cel-table">
