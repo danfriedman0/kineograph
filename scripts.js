@@ -30,6 +30,7 @@ function KGraph($kgraph, templates) {
 	this.osDepthForward = $osDepth.last().val();
 
 	this.templates = templates;
+	this.gridLength = templates.$timelineLayerTemplate.find('td').length;
 	
 	this.settings = {
 		strokeStyle: '#000',
@@ -248,7 +249,7 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 		}
 
 		// extend timeline grid if we're at the end
-		else if (currentFrameIndex === this.activeLayer.cels.length) {
+		else if (currentFrameIndex === this.gridLength) {
 			this.extendTimelines();
 		}
 	}
@@ -283,6 +284,32 @@ KGraph.prototype.changeBrushSize = function(n) {
 
 /*** Layer navigation */
 
+KGraph.prototype.newLayer = function() {
+	var templates = this.templates;
+	var layers = this.timelineLayers;
+
+	var $newCanvas = templates.$canvasTemplate.clone(true).removeClass('template');
+	templates.$canvasTemplate.before($newCanvas);
+
+	var $newLayer = templates.$timelineLayerTemplate.clone(true).removeClass('template');
+	templates.$timelineLayerTemplate.before($newLayer);
+
+	var newLayer = new KGraph.TimelineLayer($newCanvas, $newLayer, this.settings);
+
+	layers.push(newLayer);
+	this.changeLayer(layers.length - 1);
+}
+
+KGraph.prototype.changeLayer = function(index) {
+	var activeLayer = this.activeLayer;
+	if (activeLayer) {
+		activeLayer.deactivate();
+		activeLayer.refreshSettings(this.settings);
+	}
+	this.activeLayer = this.timelineLayers[index];
+	this.activeLayer.activate();
+};
+
 KGraph.prototype.addLayer = function($canvas, $layer, layerArray) {
 	if (!layerArray || !this.hasOwnProperty(layerArray)) {
 		layerArray = 'timelineLayers';
@@ -291,17 +318,12 @@ KGraph.prototype.addLayer = function($canvas, $layer, layerArray) {
 	var layers = this[layerArray];
 
 	var newLayer = new KGraph.TimelineLayer($canvas, $layer, this.settings);
+	
 	layers.push(newLayer);
 	this.changeLayer(layers.length - 1);
 };
 
-KGraph.prototype.changeLayer = function(index) {
-	if (this.activeLayer) {
-		this.activeLayer.deactivate();
-		this.activeLayer.refreshSettings(this.settings);
-	}
-	this.activeLayer = this.timelineLayers[index];
-};
+
 
 
 /*** Frame navigation */
@@ -344,13 +366,15 @@ KGraph.prototype.duplicateFrame = function(sourceFrameIndex, newFrameIndex) {
 /*** Timeline display */
 
 KGraph.prototype.extendTimelines = function(n) {
+
+	var templates = this.templates;
+	var $timelineLayerTemplate = templates.$timelineLayerTemplate;
+	var numberMark = templates.numberMark;
+	var dotMark = templates.dotMark;
+
 	if (!n) {
 		n = 22;
 	}
-
-	var templates = this.templates;
-	var numberMark = templates.numberMark;
-	var dotMark = templates.dotMark;
 
 	var newCels = templates.cel.repeat(n);
 
@@ -360,7 +384,7 @@ KGraph.prototype.extendTimelines = function(n) {
 	});
 
 	// extend timeline layer template
-	templates.$timelineLayerTemplate.find('.cel').last().after(newCels);
+	$timelineLayerTemplate.find('.cel').last().after(newCels);
 
 	// extend timeline ruler
 	var currentLength = this.$ruler.find('td').length;
@@ -376,6 +400,8 @@ KGraph.prototype.extendTimelines = function(n) {
 	}
 
 	this.$ruler.append(newRulerCels);
+
+	this.gridLength += n;
 }
 
 
@@ -493,10 +519,6 @@ KGraph.TimelineLayer = function($canvas, $layer, settings) {
 	this.clipboard = {
 		pasted: false
 	};
-
-	// add first cel
-	var firstCel = this.ctx.createImageData(this.canvas.width, this.canvas.height);
-	this.cels.push(firstCel);
 
 	// Events
 	var me = this;
@@ -745,21 +767,20 @@ function initializeCanvas() {
 	var $dotMark = $('.ruler-cel').eq(0);
 	var $numberMark = $('.ruler-cel').eq(3);
 	var $timelineLayerTemplate = $('.cel-layer.template');
+	var $canvasTemplate = $('.canvas.template');
 
 	var templates = {
 		cel: objToHtmlString($cel),
 		dotMark: objToHtmlString($dotMark),
 		numberMark: objToHtmlString($numberMark).split(/\d+/),
-		$timelineLayerTemplate: $timelineLayerTemplate
+		$timelineLayerTemplate: $timelineLayerTemplate,
+		$canvasTemplate: $canvasTemplate
 	};
 
-	// Initialize new KGraph object and add canvas layers 
+	// Initialize new KGraph object and add the first layer
 	var $kgraph = $('#kgraph');
 	var kg = new KGraph($kgraph, templates);
-
-	var $canvas = $('.canvas');
-	var $layer = $('.cel-layer').first();
-	kg.addLayer($canvas, $layer);
+	kg.newLayer();
 
 	$('.onion-skin').each(function() {
 		kg.addOnionSkin($(this));
