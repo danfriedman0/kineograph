@@ -52,13 +52,12 @@ function KGraph($kgraph, templates) {
 
 	this.brushNo = 0;
 	
-	this.layers = [];
+	this.timelineLayers = [];
 	this.activeLayer = null;
 	this.currentFrameIndex = 0;
 	this.lastFrameIndex = 0;
 
 	this.onionSkins = [];
-
 
 	/* Events */
 	var me = this;
@@ -196,7 +195,7 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 
 		// shift + ctrl + x: delete frame
 		if (key === 88) {
-			this.layers.forEach(function(layer) {
+			this.timelineLayers.forEach(function(layer) {
 				layer.removeCel(currentFrameIndex, true);				
 			});
 
@@ -215,7 +214,7 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 
 		// ctrl + x: delete cel
 		else if (key === 88) {
-			this.layers.forEach(function(layer) {
+			this.timelineLayers.forEach(function(layer) {
 				layer.removeCel(currentFrameIndex, false);				
 			});
 		}
@@ -284,10 +283,16 @@ KGraph.prototype.changeBrushSize = function(n) {
 
 /*** Layer navigation */
 
-KGraph.prototype.addLayer = function($canvas, $layer) {
+KGraph.prototype.addLayer = function($canvas, $layer, layerArray) {
+	if (!layerArray || !this.hasOwnProperty(layerArray)) {
+		layerArray = 'timelineLayers';
+	}
+
+	var layers = this[layerArray];
+
 	var newLayer = new KGraph.TimelineLayer($canvas, $layer, this.settings);
-	this.layers.push(newLayer);
-	this.changeLayer(this.layers.length - 1);
+	layers.push(newLayer);
+	this.changeLayer(layers.length - 1);
 };
 
 KGraph.prototype.changeLayer = function(index) {
@@ -295,14 +300,14 @@ KGraph.prototype.changeLayer = function(index) {
 		this.activeLayer.deactivate();
 		this.activeLayer.refreshSettings(this.settings);
 	}
-	this.activeLayer = this.layers[index];
+	this.activeLayer = this.timelineLayers[index];
 };
 
 
 /*** Frame navigation */
 
 KGraph.prototype.changeFrame = function(newFrameIndex, bLeavePlayhead) {
-	this.layers.forEach(function(layer) {
+	this.timelineLayers.forEach(function(layer) {
 		layer.switchCel(newFrameIndex);
 	});
 	this.currentFrameIndex = newFrameIndex;
@@ -320,7 +325,7 @@ KGraph.prototype.changeFrame = function(newFrameIndex, bLeavePlayhead) {
 }
 
 KGraph.prototype.insertFrame = function(frameIndex) {
-	this.layers.forEach(function(layer) {
+	this.timelineLayers.forEach(function(layer) {
 		layer.insertCel(frameIndex);
 	});
 	this.changeFrame(frameIndex);
@@ -343,22 +348,30 @@ KGraph.prototype.extendTimelines = function(n) {
 		n = 22;
 	}
 
-	var newCels = this.templates.cel.repeat(n);
+	var templates = this.templates;
+	var numberMark = templates.numberMark;
+	var dotMark = templates.dotMark;
 
-	this.layers.forEach(function(layer) {
+	var newCels = templates.cel.repeat(n);
+
+	// extend timeline layers
+	this.timelineLayers.forEach(function(layer) {
 		layer.extendTimeline(newCels);
 	});
 
-	// build new ruler cels
+	// extend timeline layer template
+	templates.$timelineLayerTemplate.find('.cel').last().after(newCels);
+
+	// extend timeline ruler
 	var currentLength = this.$ruler.find('td').length;
 	var newRulerCels = '';
 
 	for (var i = currentLength, l = currentLength + n; i < l; i++) {
 		if ((i + 1) % 4 === 0) {
-			newRulerCels += this.templates.numberMark[0] + (i + 1) + this.templates.numberMark[1];
+			newRulerCels += numberMark[0] + (i + 1) + numberMark[1];
 		} 
 		else {
-			newRulerCels += this.templates.dotMark;
+			newRulerCels += dotMark;
 		}
 	}
 
@@ -731,11 +744,13 @@ function initializeCanvas() {
 	var $cel = $('.cel').eq(1);
 	var $dotMark = $('.ruler-cel').eq(0);
 	var $numberMark = $('.ruler-cel').eq(3);
+	var $timelineLayerTemplate = $('.cel-layer.template');
 
 	var templates = {
 		cel: objToHtmlString($cel),
 		dotMark: objToHtmlString($dotMark),
-		numberMark: objToHtmlString($numberMark).split(/\d+/)
+		numberMark: objToHtmlString($numberMark).split(/\d+/),
+		$timelineLayerTemplate: $timelineLayerTemplate
 	};
 
 	// Initialize new KGraph object and add canvas layers 
