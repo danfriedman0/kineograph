@@ -5,6 +5,7 @@
 	<title>Kineograph</title>
 	<link rel="stylesheet" href="style.css">
 	<link href='https://fonts.googleapis.com/css?family=Mada' rel='stylesheet' type='text/css'>
+	<script src="https://use.fontawesome.com/c5ebc50545.js"></script>
 </head>
 <body>
 
@@ -81,8 +82,25 @@
 		<div id="timeline-container" class="timeline-container flex-row flex-stretch">
 
 			<div id="layer-navbar">
-				<div class="timeline-row">
-					<div class="content">Layer 1</div>
+				<div class="timeline-row layer-nav template flex-row">
+					<a class="layer-button toggle-visibility" href="#">
+						<i class="fa fa-eye" aria-hidden="true" title="Toggle layer visibility"></i>
+					</a>
+					<div class="layer-name"></div>
+					<a class="layer-button toggle-layer-menu" href="#">
+						<i class="fa fa-angle-right" aria-hidden="true" title="Layer menu"></i>
+					</a>
+					<div class="layer-button-dropdown">
+						<a class="layer-button layer-up" href="#">
+							<i class="fa fa-arrow-up" aria-hidden="true" title="Move layer up"></i>
+						</a>
+						<a class="layer-button layer-down" href="#">
+							<i class="fa fa-arrow-down" aria-hidden="true" title="Move layer down"></i>
+						</a>
+						<a class="layer-button delete-layer" href="#">
+							<i class="fa fa-trash" aria-hidden="true" title="Delete layer"></i>
+						</a>
+					</div>
 				</div>
 				<div class="timeline-row">
 					<div class="content">
