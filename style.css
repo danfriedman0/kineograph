@@ -136,6 +136,16 @@ body {
 
 .layer-name {
 	margin: 0 5px;
+	width: 75px;
+	height: auto;
+	overflow-x: scroll;
+}
+
+.layer-name-input {
+	display: none;
+	margin: 0 5px;
+	font-family: inherit;
+	font-size: inherit;
 }
 
 .layer-button {
