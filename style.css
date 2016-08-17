@@ -31,10 +31,24 @@ body {
 	text-align: left;
 }
 
+.canvas,
 .onion-skin {
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+
+.canvas.inactive {
+	pointer-events: none;
+}
+
+.canvas.template {
+	visibility: hidden;
+	position: relative;
+	pointer-events: none;
+}
+
+.onion-skin {
 	pointer-events: none;
 	z-index: -1;
 }
@@ -89,24 +103,83 @@ body {
 #timeline-container {
 	border: 2px solid darkslategray;
 	border-radius: 4px;
+	box-sizing: border-box;
 	width: 640px;
 	padding: 5px;
 }
 
 .timeline-row {
 	height: 24px;
+	text-align: left;
 }
 
 /*** Layer navigation */
 
 #layer-navbar {
 	margin-top: 24px;
+	flex-shrink: 0;
+}
+
+.layer-nav {
+	position: relative;
+	cursor: pointer;
+}
+
+.layer-nav.active {
+	font-style: italic;
+	cursor: auto;
+}
+
+.layer-nav.template {
+	display: none;
+}
+
+.layer-name {
+	margin: 0 5px;
+	width: 75px;
+	height: auto;
+	overflow-x: scroll;
+}
+
+.layer-name-input {
+	display: none;
+	margin: 0 5px;
+	font-family: inherit;
+	font-size: inherit;
+}
+
+.layer-button {
+	color: black;
+	text-decoration: none;
+	transition: all .2s;
+}
+
+.layer-button:hover {
+	color: #008CBA;
+}
+
+.toggle-layer-menu {
+	margin-right: 2px;
+}
+
+.toggle-layer-menu.open {
+	transform: rotateY(180deg);
+}
+
+.layer-button-dropdown {
+	display: none;
+	margin: 0 5px;
+}
+
+#add-layer {
+	margin-left: 20px;
 }
 
 /*** Inner timeline */
 
 #timeline-inner {
-	width: 550px;
+	width: 86%;
+	flex-shrink: 1;
 	overflow: scroll;
 	position: relative;
 }
@@ -149,7 +222,6 @@ body {
 .cel.active {
 	border: 1px solid rgba(81, 203, 238, 1);
 	box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-	z-index: 100;
 }
 
 .cel.blank.active {
@@ -213,7 +285,7 @@ body {
 
 #playhead-line {
 	width: 1px;
-	height: 24px;
+	height: 0px;
 	background-color: darkslategray;
 	position: absolute;
 	left: 4px;
