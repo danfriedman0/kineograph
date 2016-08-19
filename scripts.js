@@ -2,6 +2,8 @@
  * Scripts
  */
 
+"use strict";
+
 /*************************************************************************************************/
 /* KGraph ****************************************************************************************/
 /*************************************************************************************************/
@@ -11,24 +13,8 @@ function KGraph($kgraph, templates) {
 	this.$canvasWrapper = $kgraph.find('#canvas-wrapper');
 	this.$frameNumber = $kgraph.find('#frame-number');
 	this.$playhead = $kgraph.find('#playhead');
+	this.$playButton = $kgraph.find('#play-button i');
 	this.$ruler = $kgraph.find('#ruler');
-
-	// Reset frameNumber
-	this.$frameNumber.val('1');
-
-	// Read onion skin settings from page
-	if ($('#use-onion-skin')[0].checked) {
-		this.useOnionSkin = true;
-		this.$kgraph.find('.onion-skin-depth').attr('disabled', false);
-	}
-	else {
-		this.useOnionSkin = false;
-		this.$kgraph.find('.onion-skin-depth').attr('disabled', true);
-	}
-
-	var $osDepth = $('.onion-skin-depth');
-	this.osDepthBack = $osDepth.first().val() * -1;
-	this.osDepthForward = $osDepth.last().val();
 
 	this.templates = templates;
 	this.gridLength = templates.$timelineLayerTemplate.find('td').length;
@@ -61,6 +47,42 @@ function KGraph($kgraph, templates) {
 	this.lastFrameIndex = 0;
 
 	this.onionSkins = [];
+
+	this.playback = null;
+	this.playing = false;
+
+	// Reset frameNumber
+	this.$frameNumber.val('1');
+
+	// Read onion skin settings from page
+	if ($('#use-onion-skin')[0].checked) {
+		this.useOnionSkin = true;
+		this.$kgraph.find('.onion-skin-depth').attr('disabled', false);
+	}
+	else {
+		this.useOnionSkin = false;
+		this.$kgraph.find('.onion-skin-depth').attr('disabled', true);
+	}
+
+	var $osDepth = $('.onion-skin-depth');
+	this.osDepthBack = $osDepth.first().val() * -1;
+	this.osDepthForward = $osDepth.last().val();
+
+	// Read loop settings from page
+	if ($('#loop-playback')[0].checked) {
+		this.loopPlayback = true;
+		this.$kgraph.find('#loop-depth').attr('disabled', false);
+	}
+	else {
+		this.loopPlayback = false;
+		this.$kgraph.find('#loop-depth').attr('disabled', true);
+	}
+
+	this.loopDepth = $('#loop-depth').val();
+
+	// Read fps from page
+	this.fps = parseInt($('#fps').val());
+
 
 	/* Events */
 	var me = this;
@@ -101,43 +123,56 @@ function KGraph($kgraph, templates) {
 		me.newLayer();
 	});
 
-	$layerNavbar.find('.toggle-layer-menu').on('click', function() {
-		$(this)
-			.toggleClass('open')
-			.next('.layer-button-dropdown').toggle();
-	});
+	$layerNavbar.find('.toggle-layer-menu')
+		.attr('title', 'Layer menu')
+		.on('click', function() {
+			$(this)
+				.toggleClass('open')
+				.next('.layer-button-dropdown').toggle();
+		});
 
 	/*** Layer operations */
 
-	$layerNavbar.find('.delete-layer').on('click', function() {
-		if (confirm('Delete layer?')) {
-			var layerIndex = $(this).closest('.layer-nav').index() - 1;
-			me.deleteLayer(layerIndex);		
-		}
-	});
+	$layerNavbar.find('.delete-layer')
+		.attr('title', 'Delete menu')
+		.on('click', function() {
+			if (confirm('Delete layer?')) {
+				var layerIndex = $(this).closest('.layer-nav').index() - 1;
+				me.deleteLayer(layerIndex);		
+			}
+		});
 
-	$layerNavbar.find('.layer-up').on('click', function(e) {
-		var domIndex = $(this).closest('.layer-nav').index() - 1;
-		if (domIndex > 0) {
-			var layerIndex = me.timelineLayers.length - domIndex - 1;
-			var $timelineLayer = me.timelineLayers[layerIndex];
-			me.moveLayer($timelineLayer, layerIndex, layerIndex + 1);
-		}
-	});
+	$layerNavbar.find('.layer-up')
+		.attr('title', 'Move layer up')
+		.on('click', function(e) {
+			var domIndex = $(this).closest('.layer-nav').index() - 1;
+			if (domIndex > 0) {
+				var layerIndex = me.timelineLayers.length - domIndex - 1;
+				var $timelineLayer = me.timelineLayers[layerIndex];
+				me.moveLayer($timelineLayer, layerIndex, layerIndex + 1);
+			}
+		});
 
-	$layerNavbar.find('.layer-down').on('click', function(e) {
-		var domIndex = $(this).closest('.layer-nav').index() - 1;;
-		if (domIndex < me.timelineLayers.length - 1) {
-			var layerIndex = me.timelineLayers.length - domIndex - 1;
-			var $timelineLayer = me.timelineLayers[layerIndex];
-			me.moveLayer($timelineLayer, layerIndex, layerIndex - 1);
-		}
-	});
+	$layerNavbar.find('.layer-down')
+		.attr('title', 'Move layer down')
+		.on('click', function(e) {
+			var domIndex = $(this).closest('.layer-nav').index() - 1;;
+			if (domIndex < me.timelineLayers.length - 1) {
+				var layerIndex = me.timelineLayers.length - domIndex - 1;
+				var $timelineLayer = me.timelineLayers[layerIndex];
+				me.moveLayer($timelineLayer, layerIndex, layerIndex - 1);
+			}
+		});
 
 	/*** Frame navigation */
 
 	$(document).on('click', '.cel', function() {
 		var newFrameIndex = parseInt($(this).index());
+		var domLayerIndex = parseInt($(this).closest('.cel-layer').index('.cel-layer'));
+		var layerIndex = me.timelineLayers.length - domLayerIndex;
+		if (layerIndex !== me.currentLayerIndex) {
+			me.changeLayer(layerIndex);
+		}
 		me.changeFrame(newFrameIndex);
 	});
 
@@ -158,6 +193,78 @@ function KGraph($kgraph, templates) {
 
 	$(document).on('pasteCel', function(e, newFrameIndex) {
 		me.changeFrame(newFrameIndex);
+	});
+
+	/*** Playback */
+	var $playbackButtons = me.$kgraph.find('#playback-buttons');
+
+	// Add the titles now because otherwise it interferes with page loading
+	$playbackButtons
+		.attr('title', 'First frame (shift + left/a)')
+		.find('#jump-back').on('click', function() {
+			if (me.currentFrameIndex > 0) {
+				me.changeFrame(0);
+			}
+		});
+
+	$playbackButtons.find('#back-one')
+		.attr('title', 'Back one frame (left/a)')
+		.on('click', function() {
+			if (me.currentFrameIndex > 0) {
+				me.changeFrame(me.currentFrameIndex - 1);
+			}
+		});
+
+	$playbackButtons.find('#forward-one')
+		.attr('title', 'Forward one frame (right/d)')
+		.on('click', function() {
+			if (me.currentFrameIndex < me.gridLength) {
+				me.changeFrame(me.currentFrameIndex + 1);
+			}
+		});
+
+	$playbackButtons.find('#jump-forward')
+		.attr('title', 'Last frame (shift + right/d)')
+		.on('click', function() {
+			if (me.currentFrameIndex < me.gridLength) {
+				me.changeFrame(me.gridLength);
+			}
+		});
+
+	me.$playButton.on('click', function() {
+		me.togglePlayback();
+	});
+
+	me.$kgraph.find('#fps').on('change', function() {
+		me.fps = parseInt(this.value);
+	});
+
+	// Loop playback
+
+	me.$kgraph.find('#loop-playback').on('change', function() {
+		if (this.checked) {
+			me.loopPlayback = true;
+			me.$kgraph.find('#loop-depth').attr('disabled', false);
+		}
+		else {
+			me.loopPlayback = false;
+			me.$kgraph.find('#loop-depth').attr('disabled', true);
+		}
+	});
+
+	me.$kgraph.find('#loop-depth').on('change', function() {
+		var newLoopDepth = parseInt(this.value);
+		var lastFrameIndex = me.getLastFrameIndex();
+		if (newLoopDepth >= 0 && (newLoopDepth <= lastFrameIndex || newLoopDepth <= me.loopDepth)) {
+			me.loopDepth = newLoopDepth;
+		}
+		else if (lastFrameIndex >= 12) {
+			me.loopDepth = lastFrameIndex;
+			this.value = lastFrameIndex;
+		}
+		else {
+			this.value = me.loopDepth;
+		}
 	});
 
 	/*** Drag and drop */
@@ -248,7 +355,6 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 		// shift + ctrl + x: delete frame
 		if (key === 88) {
 			this.activeLayer.removeCel(currentFrameIndex, true);
-
 			this.changeFrame(currentFrameIndex);
 		}
 	}
@@ -275,9 +381,19 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 			this.duplicateFrame(currentFrameIndex, currentFrameIndex + 1);
 
 			// extend timeline grid if we're at the end
-			if (currentFrameIndex === this.gridLength) {
+			if (currentFrameIndex === this.gridLength - 1) {
 				this.extendTimelines();
 			}
+		}
+
+		// shift + left arrow or a: jump to first frame
+		else if ((key === 37 || key === 65) && currentFrameIndex > 0) {
+			this.changeFrame(0);
+		}
+
+		// shift + right arrow or d: jup to last frame
+		else if ((key === 39 || key === 68) && currentFrameIndex < this.gridLength) {
+			this.changeFrame(this.getLastFrameIndex());
 		}
 	}
 
@@ -295,12 +411,12 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 
 	// right arrow or d: move right one frame
 	else if (key === 39 || key === 68) {
-		if (currentFrameIndex < this.activeLayer.cels.length) {
+		if (currentFrameIndex < this.gridLength) {
 			this.changeFrame(currentFrameIndex + 1);
 		}
 
 		// extend timeline grid if we're at the end
-		else if (currentFrameIndex === this.gridLength) {
+		if (currentFrameIndex === this.gridLength - 1) {
 			this.extendTimelines();
 		}
 	}
@@ -320,14 +436,16 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 		}
 	}
 
-
+	// space: play/pause animation
+	else if (key === 32) {
+		this.togglePlayback();
+	}
 }
 
 /*** Brush settings */
 
 KGraph.prototype.changeColor = function(color) {
 	if (color === 'transparent') {
-		console.log('eraser');
 		this.settings.globalCompositeOperation = 'destination-out';
 	}
 	else {
@@ -472,6 +590,8 @@ KGraph.prototype.moveLayer = function($timelineLayer, currentIndex, newIndex) {
 /*** Frame navigation */
 
 KGraph.prototype.changeFrame = function(newFrameIndex, bLeavePlayhead) {
+	this.activeLayer.closeStroke();
+
 	this.timelineLayers.forEach(function(layer) {
 		layer.switchCel(newFrameIndex);
 	});
@@ -503,6 +623,56 @@ KGraph.prototype.duplicateFrame = function(sourceFrameIndex, newFrameIndex) {
 	this.changeFrame(newFrameIndex);
 }
 
+KGraph.prototype.getLastFrameIndex = function() {
+	var maxLength = Math.max(...this.timelineLayers.map(function(layer) {
+		return layer.cels.length;
+	}));
+
+	return maxLength ? maxLength - 1 : 0;
+}
+
+/*** Playback */
+
+KGraph.prototype.stopPlayback = function() {
+	this.playing = false;
+	this.$playButton.removeClass('fa-pause').addClass('fa-play');
+	clearInterval(this.playback);
+}
+
+KGraph.prototype.startPlayback = function() {
+	var me = this;
+	var lastFrameIndex = this.getLastFrameIndex();
+	var startFrameIndex = this.currentFrameIndex;
+
+	if (this.loopPlayback && startFrameIndex + this.loopDepth < lastFrameIndex) {
+		lastFrameIndex = startFrameIndex + this.loopDepth;
+	}
+
+	me.playing = true;
+	me.$playButton.removeClass('fa-play').addClass('fa-pause');
+	
+	me.playback = setInterval(function() {
+		if (me.currentFrameIndex < lastFrameIndex) {
+			me.changeFrame(me.currentFrameIndex + 1);
+		}
+		else if (me.loopPlayback) {
+			me.changeFrame(startFrameIndex);
+		}
+		else {
+			me.stopPlayback();
+		}
+	}, 1000/me.fps);
+}
+
+KGraph.prototype.togglePlayback = function() {
+	if (!this.playing) {
+		this.startPlayback();
+	}
+	else {
+		this.stopPlayback();
+	}
+}
+
 
 /*** Timeline display */
 
@@ -514,7 +684,7 @@ KGraph.prototype.extendTimelines = function(n) {
 	var dotMark = templates.dotMark;
 
 	if (!n) {
-		n = 21;
+		n = 29;
 	}
 
 	var newCels = templates.cel.repeat(n);
@@ -551,7 +721,16 @@ KGraph.prototype.extendTimelines = function(n) {
 /*** Playback */
 
 KGraph.prototype.movePlayhead = function(newFrameIndex) {
-	this.$playhead.css('left', newFrameIndex * 24);
+	var $playhead = this.$playhead;
+	$playhead.css('left', newFrameIndex * 24);
+
+	// scroll timeline if needed
+	var offset = $playhead.offset().left - $playhead.parent().offset().left;
+	if (offset < 0 || offset > 720) {
+		$('#timeline-inner').animate({
+			scrollLeft: offset
+		});
+	}
 }
 
 
@@ -666,13 +845,18 @@ KGraph.TimelineLayer = function($canvas, $layer, $layerNav, layerName, settings)
 				me.strokeSegment(e.pageX, e.pageY);		
 			}
 		})
-		.on('dblclick mouseleave', function() {
+		.on('dblclick', function() {
 			me.closeStroke();
+		})
+		.on('mouseleave', function() {
+			me.closeStroke(true);
 		});
 
-	me.$layerNav.find('.toggle-visibility').on('click', function() {
-		me.toggleVisibility();
-	});
+	me.$layerNav.find('.toggle-visibility')
+		.attr('title', 'Toggle layer visibility')
+		.on('click', function() {
+			me.toggleVisibility();
+		});
 
 	me.$layerNav.find('.layer-name').on('dblclick', function() {
 		$(this).hide();
@@ -716,6 +900,7 @@ KGraph.TimelineLayer.prototype.undo = function() {
 
 KGraph.TimelineLayer.prototype.deactivate = function() {
 	if (this.active) {
+		this.closeStroke();
 		this.active = false;
 		this.$canvas.removeClass('active').addClass('inactive');
 		this.$layerNav.removeClass('active');
@@ -935,12 +1120,14 @@ KGraph.TimelineLayer.prototype.strokeSegment = function(pageX, pageY) {
 	this.ctx.stroke();
 };
 
-KGraph.TimelineLayer.prototype.closeStroke = function() {
+KGraph.TimelineLayer.prototype.closeStroke = function(bAbort) {
 	if (this.brushDown) {
 		this.ctx.stroke();
-		this.cachedStates.splice(-2, 2);
 		this.brushDown = false;
-		this.saveCel();		
+		this.saveCel();
+		if (!bAbort) {
+			this.cachedStates.splice(-2, 2);
+		}
 	}
 };
 
@@ -959,7 +1146,6 @@ function objToHtmlString($obj)  {
 }
 
 function initializeCanvas() {
-	"use strict";
 
 	// Get timeline templates
 	var $cel = $('.cel').eq(1);

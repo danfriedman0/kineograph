@@ -77,6 +77,17 @@ body {
 	margin-right: 5px;
 }
 
+.kg-button {
+	color: black;
+	text-decoration: none;
+	transition: all .2s;
+	margin: 0 2px;
+}
+
+.kg-button:hover {
+	color: #008CBA;
+}
+
 /* Colors */
 
 .color {
@@ -94,8 +105,26 @@ body {
 
 /* Buttons */
 
-#buttons {
+#kg-buttons {
+	height: 21px;
+	width: 858px;
 	margin-bottom: 5px;
+}
+
+.kg-button-group {
+	width: 40%;
+}
+
+.align-left {
+	text-align: left;
+}
+
+.align-right {
+	text-align: right;
+}
+
+#play-button i {
+	width: 14px;
 }
 
 /* Timeline */
@@ -104,7 +133,7 @@ body {
 	border: 2px solid darkslategray;
 	border-radius: 4px;
 	box-sizing: border-box;
-	width: 640px;
+	width: 858px;
 	padding: 5px;
 }
 
@@ -148,16 +177,6 @@ body {
 	font-size: inherit;
 }
 
-.layer-button {
-	color: black;
-	text-decoration: none;
-	transition: all .2s;
-}
-
-.layer-button:hover {
-	color: #008CBA;
-}
-
 .toggle-layer-menu {
 	margin-right: 2px;
 }
@@ -172,7 +191,7 @@ body {
 }
 
 #add-layer {
-	margin-left: 20px;
+	margin-left: 24px;
 }
 
 /*** Inner timeline */
