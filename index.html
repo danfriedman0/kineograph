@@ -39,43 +39,100 @@
 		</div>
 
 		<div id="canvas-wrapper">
-			<canvas class="canvas template" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
-			<canvas class="onion-skin" width="640" height="360"></canvas>
+			<canvas class="canvas template" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
+			<canvas class="onion-skin" width="854" height="480"></canvas>
 		</div>
 
-		<div id="buttons" class="flex-row flex-stretch">
-			<div>
-				<input id="use-onion-skin" type="checkbox">
-				<label for="use-onion-skin" class="small-text">onion skin</label>
-				<select class="onion-skin-depth back" disabled>
-					<option value="0">0</option>
-					<option value="1" selected>-1</option>
-					<option value="2">-2</option>
-					<option value="3">-3</option>
-					<option value="4">-4</option>
-					<option value="5">-5</option>
-				</select>
-				<select class="onion-skin-depth forward" disabled>
-					<option value="0" selected>0</option>
-					<option value="1">+1</option>
-					<option value="2">+2</option>
-					<option value="3">+3</option>
-					<option value="4">+4</option>
-					<option value="5">+5</option>
-				</select>
+		<div id="kg-buttons" class="flex-row flex-stretch">
+			<div class="kg-button-group flex-row flex-stretch">
+				<div>
+					<input id="use-onion-skin" type="checkbox">
+					<label for="use-onion-skin" class="small-text">onion skin:</label>
+					<select class="onion-skin-depth back" disabled>
+						<option value="0">0</option>
+						<option value="1" selected>-1</option>
+						<option value="2">-2</option>
+						<option value="3">-3</option>
+						<option value="4">-4</option>
+						<option value="5">-5</option>
+					</select>
+					<select class="onion-skin-depth forward" disabled>
+						<option value="0" selected>0</option>
+						<option value="1">+1</option>
+						<option value="2">+2</option>
+						<option value="3">+3</option>
+						<option value="4">+4</option>
+						<option value="5">+5</option>
+					</select>
+				</div>
+				<div>
+					<label for="fps" class="small-text">fps:</label>
+					<select id="fps">
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+						<option value="8">8</option>
+						<option value="9">9</option>
+						<option value="10">10</option>
+						<option value="11">11</option>
+						<option value="12" selected>12</option>
+						<option value="13">13</option>
+						<option value="14">14</option>
+						<option value="15">15</option>
+						<option value="16">16</option>
+						<option value="17">17</option>
+						<option value="18">18</option>
+						<option value="19">19</option>
+						<option value="20">20</option>
+						<option value="21">21</option>
+						<option value="22">22</option>
+						<option value="23">23</option>
+						<option value="24">24</option>
+					</select>
+				</div>
 			</div>
-			<div>
-				<label for="frame-number" class="small-text">frame:</label>
-				<input id="frame-number" type="textbox" size="3" value="1">
+
+			<div id="playback-buttons">
+				<a id="jump-back" class="kg-button" href="#">
+					<i class="fa fa-fast-backward" aria-hidden="true"></i>
+				</a>
+				<a id="back-one" class="kg-button" href="#">
+					<i class="fa fa-backward" aria-hidden="true"></i>
+				</a>
+				<a id="play-button" class="kg-button" href="#">
+					<i class="fa fa-play" aria-hidden="true"></i>
+				</a>
+				<a id="forward-one" class="kg-button" href="#">
+					<i class="fa fa-forward" aria-hidden="true"></i>
+				</a>
+				<a id="jump-forward" class="kg-button" href="#">
+					<i class="fa fa-fast-forward" aria-hidden="true"></i>
+				</a>
+			</div>
+
+			<div class="kg-button-group flex-row flex-stretch">
+				<div>
+					<input id="loop-playback" type="checkbox">
+					<label for="loop-depth" class="small-text">loop:</label>
+					<input id="loop-depth" type="text" size="2" value="12" disabled>
+				</div>
+				<div>
+					<label for="frame-number" class="small-text">frame:</label>
+					<input id="frame-number" type="text" size="3" value="1">
+				</div>
 			</div>
 		</div>
 
@@ -83,23 +140,23 @@
 
 			<div id="layer-navbar">
 				<div class="timeline-row layer-nav template flex-row">
-					<a class="layer-button toggle-visibility" href="#">
-						<i class="eye fa fa-eye" aria-hidden="true" title="Toggle layer visibility"></i>
+					<a class="kg-button toggle-visibility" href="#">
+						<i class="eye fa fa-eye" aria-hidden="true"></i>
 					</a>
 					<div class="layer-name"></div>
 					<input class="layer-name-input" type="text" size="8">
-					<a class="layer-button toggle-layer-menu" href="#">
-						<i class="fa fa-angle-right" aria-hidden="true" title="Layer menu"></i>
+					<a class="kg-button toggle-layer-menu" href="#">
+						<i class="fa fa-angle-right" aria-hidden="true"></i>
 					</a>
 					<div class="layer-button-dropdown">
-						<a class="layer-button layer-up" href="#">
-							<i class="fa fa-arrow-up" aria-hidden="true" title="Move layer up"></i>
+						<a class="kg-button layer-up" href="#">
+							<i class="fa fa-arrow-up" aria-hidden="true"></i>
 						</a>
-						<a class="layer-button layer-down" href="#">
-							<i class="fa fa-arrow-down" aria-hidden="true" title="Move layer down"></i>
+						<a class="kg-button layer-down" href="#">
+							<i class="fa fa-arrow-down" aria-hidden="true"></i>
 						</a>
-						<a class="layer-button delete-layer" href="#">
-							<i class="fa fa-trash" aria-hidden="true" title="Delete layer"></i>
+						<a class="kg-button delete-layer" href="#">
+							<i class="fa fa-trash" aria-hidden="true"></i>
 						</a>
 					</div><!-- .layer-button-dropdown -->
 				</div><!-- .layer-nav -->
@@ -183,9 +240,45 @@
 							<td class="ruler-cel">
 								<div class="mark dot-mark"></div>
 							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">24</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark number-mark">28</div>
+							</td>
+							<td class="ruler-cel">
+								<div class="mark dot-mark"></div>
+							</td>
 						</tr>
 
 						<tr class="cel-layer timeline-row template">
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
+							<td class="cel blank"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
 							<td class="cel blank"></td>
@@ -220,5 +313,6 @@
 
 	<script src="jquery.min.js"></script>
 	<script src="jquery-ui.min.js"></script>
+	<script src="whammy.js"></script>
 	<script src="scripts.js"></script>
 </body>
