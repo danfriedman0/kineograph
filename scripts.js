@@ -345,6 +345,12 @@ function KGraph($kgraph, templates) {
 		});
 		me.renderOnionSkin();
 	});
+
+	/*** Export animation */
+
+	me.$kgraph.find('#export').on('click', function() {
+		me.exportAnimation();
+	});
 }
 
 KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
@@ -780,6 +786,90 @@ KGraph.prototype.renderOnionSkin = function() {
 	}
 }
 
+/*** Export animation */
+/* Note: in the future I'll probably rewrite this to run server-side. This is just a way to
+ * save your animation for now. */
+
+KGraph.prototype.mergeCels = function(cels) {
+	var activeLayer = this.activeLayer;
+	var newCel = activeLayer.ctx.createImageData(activeLayer.canvas.width, activeLayer.canvas.height);
+	var newData = newCel.data;
+	var data, i;
+
+	var me = this;
+
+	cels.forEach(function(cel) {
+		data = cel.data;
+		for (i = 3; i < data.length; i += 4) {
+
+			// TODO: really I should be averaging the cels if 0 < transparency < 255
+			if (data[i+3] > 0) {
+				newData[i] = data[i];
+				newData[i+1] = data[i+1];
+				newData[i+2] = data[i+2];
+				newData[i+3] = data[i+3];
+			}
+		}
+	});
+
+	// console.log('merged cels');
+
+	// var lastFrameIndex = this.getLastFrameIndex();
+
+	// console.log('merged cels, drawing the cel at frame ' + (lastFrameIndex + 1));
+
+	// this.changeFrame(lastFrameIndex + 1);
+	// this.activeLayer.drawCel(newCel);
+
+	return newCel;
+}
+
+KGraph.prototype.mergeLayers = function() {
+	var timelineLayers = this.timelineLayers;
+	var exportLayer = [];
+	var lastFrameIndex = this.getLastFrameIndex();
+	var i, frameCels, frame;
+
+	for (i = 0; i < lastFrameIndex + 1; i++) {
+		frameCels = [];
+		timelineLayers.forEach(function(layer) {
+			if (layer.cels[i]) {
+				frameCels.push(layer.cels[i]);
+			}
+		});
+		frame = this.mergeCels(frameCels);
+		exportLayer.push(frame);
+	}
+
+	return exportLayer;
+}
+
+KGraph.prototype.exportAnimation = function() {
+	// first condense all the layers into one export layer
+	var exportLayer = this.mergeLayers();
+
+	// then encode with whammy.js
+	var encoder = new Whammy.Video(this.fps);
+
+	// we're going to hide all of the layers and then create a new layer and
+	// sort of play the exportLayer on it. This is a temporary trick until I
+	// think of something else
+	this.timelineLayers.forEach(function(layer) {
+		layer.hideLayer();
+	});
+	this.newLayer();
+	this.activeLayer.cels = exportLayer;
+
+
+	for (var i = 0; i < exportLayer.length; i++) {
+		this.changeFrame(i);
+		var data = this.activeLayer.ctx.getImageData(0, 0, this.activeLayer.canvas.width, this.activeLayer.canvas.height).data;
+		encoder.add(this.activeLayer.canvas);
+	}
+
+	encoder.compile(function(output) {});
+}
+
 /*************************************************************************************************/
 /* KGraph.KCanvas ********************************************************************************/
 /*************************************************************************************************/
@@ -921,17 +1011,25 @@ KGraph.TimelineLayer.prototype.activate = function() {
 
 /*** Layer operations */
 
+KGraph.TimelineLayer.prototype.hideLayer = function() {
+	this.$layerNav.find('.eye').removeClass('fa-eye').addClass('fa-eye-slash');
+	this.$canvas.hide();
+	this.visible = false;
+}
+
+KGraph.TimelineLayer.prototype.showLayer = function() {
+	this.$layerNav.find('.eye').removeClass('fa-eye-slash').addClass('fa-eye');
+	this.$canvas.show();
+	this.visible = true;
+	this.drawCel(this.cels[this.currentCelIndex]);	
+}
+
 KGraph.TimelineLayer.prototype.toggleVisibility = function() {
 	if (this.visible) {
-		this.$layerNav.find('.eye').removeClass('fa-eye').addClass('fa-eye-slash');
-		this.$canvas.hide();
-		this.visible = false;
+		this.hideLayer();
 	}
 	else {
-		this.$layerNav.find('.eye').removeClass('fa-eye-slash').addClass('fa-eye');
-		this.$canvas.show();
-		this.visible = true;
-		this.drawCel(this.cels[this.currentCelIndex]);
+		this.showLayer();
 	}
 }
 
@@ -950,7 +1048,7 @@ KGraph.TimelineLayer.prototype.switchCel = function(newCelIndex) {
 		// Look for the new cel in memory and draw it if it exists
 		var newCel = this.cels[newCelIndex];
 		if (newCel) {
-			this.drawCel(this.cels[newCelIndex]);
+			this.drawCel(newCel);
 		}
 		else {
 			this.clear();

@@ -553,6 +553,7 @@ window.Whammy = (function(){
 				webp.duration = frame.duration;
 				return webp;
 			}), outputAsArray);
+
 			callback(webm);
 			
 		}.bind(this));
