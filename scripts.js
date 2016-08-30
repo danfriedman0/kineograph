@@ -4,8 +4,6 @@
 
 "use strict";
 
-
-
 /*************************************************************************************************/
 /* KGraph ****************************************************************************************/
 /*************************************************************************************************/
@@ -349,7 +347,9 @@ function KGraph($kgraph, templates) {
 	});
 
 	/*** Export animation */
-	me.$kgraph.find('#export').on('click', me.exportAnimation());
+	me.$kgraph.find('#export').on('click', function() {
+		me.exportAnimation();
+	});
 }
 
 KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
@@ -835,8 +835,41 @@ KGraph.prototype.mergeLayers = function() {
 }
 
 KGraph.prototype.exportAnimation = function() {
+	console.log('exporting');
 	// first merge all of the layers into one export layer
-	var exportLayer = this.mergeLayers();
+	//var exportLayer = this.mergeLayers();
+
+	var exportLayer = this.activeLayer.cels;
+
+	// clear everything
+	this.timelineLayers.forEach(function(layer) {
+		layer.clear();
+	});
+	this.onionSkins.forEach(function(os) {
+		os.clear();
+	});
+
+	this.activeLayer.drawCel(exportLayer[0]);
+
+	var gif = new GIF({
+		workers: 2,
+		quality: 10,
+		width: 840,
+		height: 480
+	});
+
+	// we're going to draw each frame on the active layer canvas and add it to the gif
+	var activeLayer = this.activeLayer;
+	for (var i = 0; i < exportLayer.length; i++) {
+		activeLayer.drawCel(exportLayer[i]);
+		gif.addFrame(activeLayer.ctx, {copy: true, delay: 10});
+	}
+
+	gif.on('finished', function(blob) {
+	  window.open(URL.createObjectURL(blob));
+	});
+
+	gif.render();
 }
 
 
