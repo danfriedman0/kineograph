@@ -4,6 +4,8 @@
 
 "use strict";
 
+
+
 /*************************************************************************************************/
 /* KGraph ****************************************************************************************/
 /*************************************************************************************************/
@@ -345,6 +347,9 @@ function KGraph($kgraph, templates) {
 		});
 		me.renderOnionSkin();
 	});
+
+	/*** Export animation */
+	me.$kgraph.find('#export').on('click', me.exportAnimation());
 }
 
 KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
@@ -779,6 +784,61 @@ KGraph.prototype.renderOnionSkin = function() {
 
 	}
 }
+
+/*** Export animation */
+
+// Take an array of cels and merge them into one cel (used for flattening layers)
+KGraph.prototype.mergeCels = function(cels) {
+	var activeLayer = this.activeLayer;
+	var newCel = activeLayer.ctx.createImageData(activeLayer.canvas.width, activeLayer.canvas.height);
+	var newData = newCel.data;
+	var data, i;
+
+	var me = this;
+
+	cels.forEach(function(cel) {
+		data = cel.data;
+		for (i = 3; i < data.length; i += 4) {
+
+			// TODO: really I should be averaging the cels if 0 < transparency < 255
+			if (data[i+3] > 0) {
+				newData[i] = data[i];
+				newData[i+1] = data[i+1];
+				newData[i+2] = data[i+2];
+				newData[i+3] = data[i+3];
+			}
+		}
+	});
+
+	return newCel;
+}
+
+// Merge all of the timeline layers into one export layer
+KGraph.prototype.mergeLayers = function() {
+	var timelineLayers = this.timelineLayers;
+	var exportLayer = [];
+	var lastFrameIndex = this.getLastFrameIndex();
+	var i, frameCels, frame;
+
+	for (i = 0; i < lastFrameIndex + 1; i++) {
+		frameCels = [];
+		timelineLayers.forEach(function(layer) {
+			if (layer.cels[i]) {
+				frameCels.push(layer.cels[i]);
+			}
+		});
+		frame = this.mergeCels(frameCels);
+		exportLayer.push(frame);
+	}
+
+	return exportLayer;
+}
+
+KGraph.prototype.exportAnimation = function() {
+	// first merge all of the layers into one export layer
+	var exportLayer = this.mergeLayers();
+}
+
 
 /*************************************************************************************************/
 /* KGraph.KCanvas ********************************************************************************/
