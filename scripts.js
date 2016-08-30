@@ -789,16 +789,22 @@ KGraph.prototype.renderOnionSkin = function() {
 
 // Take an array of cels and merge them into one cel (used for flattening layers)
 KGraph.prototype.mergeCels = function(cels) {
-	var activeLayer = this.activeLayer;
-	var newCel = activeLayer.ctx.createImageData(activeLayer.canvas.width, activeLayer.canvas.height);
-	var newData = newCel.data;
-	var data, i;
 
-	var me = this;
+	// the gif encoder doesn't handle transparency properly so get a solid white canvas and merge
+	// all the cels down onto it
+	var activeLayer = this.activeLayer;
+	activeLayer.ctx.fillStyle = '#fff';
+	activeLayer.ctx.fillRect(0, 0, activeLayer.canvas.width, activeLayer.canvas.height);
+
+	var newCel = activeLayer.ctx.getImageData(0, 0, activeLayer.canvas.width, activeLayer.canvas.height),
+		newData = newCel.data,
+		me = this,
+		data, i;
+
 
 	cels.forEach(function(cel) {
 		data = cel.data;
-		for (i = 3; i < data.length; i += 4) {
+		for (i = 0; i < data.length; i += 4) {
 
 			// TODO: really I should be averaging the cels if 0 < transparency < 255
 			if (data[i+3] > 0) {
@@ -815,10 +821,10 @@ KGraph.prototype.mergeCels = function(cels) {
 
 // Merge all of the timeline layers into one export layer
 KGraph.prototype.mergeLayers = function() {
-	var timelineLayers = this.timelineLayers;
-	var exportLayer = [];
-	var lastFrameIndex = this.getLastFrameIndex();
-	var i, frameCels, frame;
+	var timelineLayers = this.timelineLayers,
+		exportLayer = [],
+		lastFrameIndex = this.getLastFrameIndex(),
+		i, frameCels, frame;
 
 	for (i = 0; i < lastFrameIndex + 1; i++) {
 		frameCels = [];
@@ -827,7 +833,9 @@ KGraph.prototype.mergeLayers = function() {
 				frameCels.push(layer.cels[i]);
 			}
 		});
+		
 		frame = this.mergeCels(frameCels);
+
 		exportLayer.push(frame);
 	}
 
@@ -835,12 +843,6 @@ KGraph.prototype.mergeLayers = function() {
 }
 
 KGraph.prototype.exportAnimation = function() {
-	console.log('exporting');
-	// first merge all of the layers into one export layer
-	//var exportLayer = this.mergeLayers();
-
-	var exportLayer = this.activeLayer.cels;
-
 	// clear everything
 	this.timelineLayers.forEach(function(layer) {
 		layer.clear();
@@ -849,7 +851,8 @@ KGraph.prototype.exportAnimation = function() {
 		os.clear();
 	});
 
-	this.activeLayer.drawCel(exportLayer[0]);
+	// first merge all of the layers into one export layer
+	var exportLayer = this.mergeLayers();
 
 	var gif = new GIF({
 		workers: 2,
@@ -858,7 +861,7 @@ KGraph.prototype.exportAnimation = function() {
 		height: 480
 	});
 
-	// we're going to draw each frame on the active layer canvas and add it to the gif
+	// draw each frame on the active layer canvas and add it to the gif
 	var activeLayer = this.activeLayer;
 	for (var i = 0; i < exportLayer.length; i++) {
 		activeLayer.drawCel(exportLayer[i]);
