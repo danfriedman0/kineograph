@@ -17,7 +17,9 @@ body {
 /* Position kgraph divs */
 
 #kgraph {
+	display: -webkit-inline-flex;
 	display: inline-flex;
+	-webkit-flex-direction: column;
 	flex-direction: column;
 }
 
@@ -61,16 +63,20 @@ body {
 /* General formatting */
 
 .flex-row {
+	display: -webkit-flex;
 	display: flex;
 }
 
 .flex-column {
+	display: -webkit-flex;
 	display: flex;
+	-webkit-flex-flow: column;
 	flex-flow: column;
 	margin: 5px;
 }
 
 .flex-stretch {
+	-webkit-justify-content: space-between;
 	justify-content: space-between;
 }
 
@@ -147,6 +153,7 @@ body {
 
 #layer-navbar {
 	margin-top: 24px;
+	-webkit-flex-shrink: 0;
 	flex-shrink: 0;
 }
 
@@ -199,6 +206,7 @@ body {
 
 #timeline-inner {
 	width: 86%;
+	-webkit-flex-shrink: 1;
 	flex-shrink: 1;
 	overflow: scroll;
 	position: relative;
