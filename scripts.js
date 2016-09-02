@@ -382,6 +382,17 @@ function KGraph($kgraph, templates) {
 	me.$exportWindow.find('#close').on('click', function() {
 		me.$exportWindow.hide();
 	});
+
+	/*** Resize */
+
+	// Every KCanvas object stores its own offset because I have this idea that that's faster than
+	// calling the offset function all the time. But that means we have to reset the offsets whenever
+	// the window is resized.
+	$(window).on('resize', function() {
+		me.timelineLayers.forEach(function(layer) {
+			layer.recalculateOffset();
+		});
+	});
 }
 
 KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
@@ -948,6 +959,10 @@ KGraph.KCanvas.prototype.copyImageData = function(imageData) {
 	var copy = this.ctx.createImageData(imageData.width, imageData.height);
 	copy.data.set(imageData.data);
 	return copy;
+}
+
+KGraph.KCanvas.prototype.recalculateOffset = function() {
+	this.offset = this.$canvas.offset();
 }
 
 /*************************************************************************************************/
