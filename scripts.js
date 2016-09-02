@@ -488,6 +488,13 @@ KGraph.prototype.handleKeypress = function(metaKey, shiftKey, key) {
 	else if (key === 32) {
 		this.togglePlayback();
 	}
+
+	// m: change MOUSE MODE
+	else if (key === 77) {
+		this.timelineLayers.forEach(function(layer) {
+			layer.toggleMouseMode();
+		});
+	}
 }
 
 /*** Brush settings */
@@ -986,12 +993,17 @@ KGraph.TimelineLayer = function($canvas, $layer, $layerNav, layerName, settings)
 		pasted: false
 	};
 	this.active = false;
+	this.mouseMode = {
+		name: 'drag',
+		brushDown: 'mousedown',
+		brushUp: 'mouseup'
+	}
 
 	// Events
 	var me = this;
 
 	me.$canvas
-		.on('click', function(e) {
+		.on(me.mouseMode.brushDown, function(e) {
 			me.startStroke(e.pageX, e.pageY);
 		})
 		.on('mousemove', function(e) {
@@ -999,7 +1011,7 @@ KGraph.TimelineLayer = function($canvas, $layer, $layerNav, layerName, settings)
 				me.strokeSegment(e.pageX, e.pageY);		
 			}
 		})
-		.on('dblclick', function() {
+		.on(me.mouseMode.brushUp, function() {
 			me.closeStroke();
 		})
 		.on('mouseleave', function() {
@@ -1026,6 +1038,67 @@ KGraph.TimelineLayer = function($canvas, $layer, $layerNav, layerName, settings)
 }
 
 KGraph.TimelineLayer.prototype = new KGraph.KCanvas();
+
+
+/*** Brush events */
+KGraph.TimelineLayer.prototype.bindBrushEvents = function() {
+	var me = this,
+		brush_down,
+		brush_up;
+
+	if (this.mouseMode === 'drag') {
+		brush_down = 'mousedown';
+		brush_up = 'mouseup';
+	}
+	else {
+		brush_down = 'click';
+		brush_up = 'dblclick';
+	}
+
+	me.$canvas
+		.on(brush_down, function(e) {
+			me.startStroke(e.pageX, e.pageY);
+		})
+		.on('mousemove', function(e) {
+			if (me.brushDown) {
+				me.strokeSegment(e.pageX, e.pageY);		
+			}
+		})
+		.on(brush_up, function() {
+			me.closeStroke();
+		})
+		.on('mouseleave', function() {
+			me.closeStroke(true);
+		});
+}
+
+KGraph.TimelineLayer.prototype.toggleMouseMode = function() {
+	var me = this;
+
+	// unbind old listeners
+	me.$canvas.off(me.mouseMode.brushDown).off(me.mouseMode.brushUp);
+
+	// reset mousemode
+	if (me.mouseMode.name === 'drag') {
+		me.mouseMode.name = 'click';
+		me.mouseMode.brushDown = 'click';
+		me.mouseMode.brushUp = 'dblclick';
+	}
+	else {
+		me.mouseMode.name = 'drag';
+		me.mouseMode.brushDown = 'mousedown';
+		me.mouseMode.brushUp = 'mouseup';		
+	}
+
+	// bind new listeners
+	me.$canvas
+		.on(me.mouseMode.brushDown, function(e) {
+			me.startStroke(e.pageX, e.pageY);
+		})
+		.on(me.mouseMode.brushUp, function() {
+			me.closeStroke();
+		});
+}
 
 
 /*** Cel memory */
@@ -1279,7 +1352,7 @@ KGraph.TimelineLayer.prototype.closeStroke = function(bAbort) {
 		this.ctx.stroke();
 		this.brushDown = false;
 		this.saveCel();
-		if (!bAbort) {
+		if (!bAbort && this.mouseMode.name !== 'drag') {
 			this.cachedStates.splice(-2, 2);
 		}
 	}
