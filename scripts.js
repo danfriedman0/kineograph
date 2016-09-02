@@ -15,6 +15,7 @@ function KGraph($kgraph, templates) {
 	this.$playhead = $kgraph.find('#playhead');
 	this.$playButton = $kgraph.find('#play-button i');
 	this.$ruler = $kgraph.find('#ruler');
+	this.$loader = $('#loader');
 
 	this.templates = templates;
 	this.gridLength = templates.$timelineLayerTemplate.find('td').length;
@@ -344,6 +345,13 @@ function KGraph($kgraph, templates) {
 			onionSkin.clear();
 		});
 		me.renderOnionSkin();
+	});
+
+	/*** Loader */
+
+	// prevent scrolling while loader is visible
+	me.$loader.on('mousewheel DOMMouseScroll', function(e) {
+		e.preventDefault();
 	});
 
 	/*** Export animation */
@@ -801,12 +809,12 @@ KGraph.prototype.mergeCels = function(cels) {
 		me = this,
 		data, i;
 
-
 	cels.forEach(function(cel) {
 		data = cel.data;
 		for (i = 0; i < data.length; i += 4) {
 
-			// TODO: really I should be averaging the cels if 0 < transparency < 255
+			// TODO: really I should be averaging the cels if 0 < transparency < 255 but there are
+			// aliasing problems.
 			if (data[i+3] > 0) {
 				newData[i] = data[i];
 				newData[i+1] = data[i+1];
@@ -843,16 +851,19 @@ KGraph.prototype.mergeLayers = function() {
 }
 
 KGraph.prototype.exportAnimation = function() {
+	var me = this;
+	me.$loader.show();
+
 	// clear everything
-	this.timelineLayers.forEach(function(layer) {
+	me.timelineLayers.forEach(function(layer) {
 		layer.clear();
 	});
-	this.onionSkins.forEach(function(os) {
+	me.onionSkins.forEach(function(os) {
 		os.clear();
 	});
 
-	// first merge all of the layers into one export layer
-	var exportLayer = this.mergeLayers();
+	// first merge all of the layers into one layer for export
+	var exportLayer = me.mergeLayers();
 
 	var gif = new GIF({
 		workers: 2,
@@ -861,15 +872,22 @@ KGraph.prototype.exportAnimation = function() {
 		height: 480
 	});
 
+	// calculate the delay in milliseconds. Unfortunately this will round to the nearest multiple of 10
+	// because delay is encoded in the gif in hundredths of a second. So there's no way to get exactly 12 fps.
+	var delay = Math.round(1000/me.fps);
+
 	// draw each frame on the active layer canvas and add it to the gif
-	var activeLayer = this.activeLayer;
+	var activeLayer = me.activeLayer;
 	for (var i = 0; i < exportLayer.length; i++) {
 		activeLayer.drawCel(exportLayer[i]);
-		gif.addFrame(activeLayer.ctx, {copy: true, delay: 10});
+		gif.addFrame(activeLayer.ctx, {copy: true, delay: delay});
 	}
+	activeLayer.clear();
 
 	gif.on('finished', function(blob) {
-	  window.open(URL.createObjectURL(blob));
+		me.$loader.hide();
+		me.changeFrame(me.currentFrameIndex);
+	  	window.open(URL.createObjectURL(blob));
 	});
 
 	gif.render();
