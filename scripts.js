@@ -385,7 +385,7 @@ function KGraph($kgraph, templates) {
 
 	/*** Resize */
 
-	// Every KCanvas object stores its own offset because I have this idea that that's faster than
+	// Every KCanvas object stores its own offset because I had this idea that that would be faster than
 	// calling the offset function all the time. But that means we have to reset the offsets whenever
 	// the window is resized.
 	$(window).on('resize', function() {
