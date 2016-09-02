@@ -313,7 +313,22 @@
 
 	</div><!-- #kgraph -->
 
-	<div id="loader"><img src="images/loader.gif"></div>
+	<div id="loader">
+		<div id="loader-inner">
+			<img src="images/loader.gif">
+		</div>
+	</div>
+
+	<div id="export-window" class="hidden">
+		<a id="close" href="#">x</a>
+		<p>Finished rendering</p>
+		<div id="export-buttons">
+			<a id="download-export" href="#/" target="_blank" download="animation.gif">
+				<button>Download</button>
+			</a>
+			<button id="open-export" title="To save, right-click the gif and click 'Save image as...'">Open in new tab</button>
+		</div>
+	</div>
 
 
 	<script src="jquery.min.js"></script>
