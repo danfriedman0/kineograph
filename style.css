@@ -319,6 +319,10 @@ body {
 	left: 4px;
 }
 
+/* Export animation */
+
+	/*** Loading wheel */
+
 #loader {
 	position: absolute;
 	top: 0;
@@ -326,6 +330,45 @@ body {
 	height: 100%;
 	padding-top: 350px;
 	display: none;
+}
+
+#loader-inner {
+	display: inline-block;
+	border: 1px solid rgba(0, 0, 0, .1);
+	border-radius: 2px;
+	padding: 5px 5px 0 5px;
+	background-color: #fff;
+}
+
+	/*** Export dialogue window */
+
+#export-window {
+	position: absolute;
+	display: inline-block;
+	left: 50%;
+	margin-left: -100px;
+	top: 300px;
+	border: 1px solid rgba(0, 0, 0, .1);
+	border-radius: 5px;
+	padding: 5px;
+	background-color: #fff;
+	min-width: 167px;
+}
+
+#export-window.hidden {
+	display: none;
+}
+
+#close {
+	position: absolute;
+	top: 0;
+	right: 5px;
+	text-decoration: none;
+	color: #000;
+}
+
+#download-export {
+	text-decoration: none;
 }
 
 

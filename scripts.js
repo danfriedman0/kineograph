@@ -16,6 +16,7 @@ function KGraph($kgraph, templates) {
 	this.$playButton = $kgraph.find('#play-button i');
 	this.$ruler = $kgraph.find('#ruler');
 	this.$loader = $('#loader');
+	this.$exportWindow = $('#export-window');
 
 	this.templates = templates;
 	this.gridLength = templates.$timelineLayerTemplate.find('td').length;
@@ -52,6 +53,8 @@ function KGraph($kgraph, templates) {
 	this.playback = null;
 	this.playing = false;
 
+	this.exportGifUrl = null;
+
 	// Reset frameNumber
 	this.$frameNumber.val('1');
 
@@ -83,6 +86,18 @@ function KGraph($kgraph, templates) {
 
 	// Read fps from page
 	this.fps = parseInt($('#fps').val());
+
+	// Identify the browser (http://stackoverflow.com/a/9851769)
+
+	// At least Safari 3+: "[object HTMLElementConstructor]"
+	this.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+    // Internet Explorer 6-11
+	this.isIE = /*@cc_on!@*/false || !!document.documentMode;
+
+	// Safari and IE don't support the download attribute for anchor tags
+	if (this.isSafari || this.isIE) {
+		this.$exportWindow.find('#download-export').hide();
+	}
 
 
 	/* Events */
@@ -357,6 +372,15 @@ function KGraph($kgraph, templates) {
 	/*** Export animation */
 	me.$kgraph.find('#export').on('click', function() {
 		me.exportAnimation();
+	});
+
+	me.$exportWindow.find('#open-export').on('click', function() {
+	  	//window.open(URL.createObjectURL(blob));
+	  	window.open(me.exportGifUrl);
+	});
+
+	me.$exportWindow.find('#close').on('click', function() {
+		me.$exportWindow.hide();
 	});
 }
 
@@ -882,12 +906,13 @@ KGraph.prototype.exportAnimation = function() {
 		activeLayer.drawCel(exportLayer[i]);
 		gif.addFrame(activeLayer.ctx, {copy: true, delay: delay});
 	}
-	activeLayer.clear();
 
 	gif.on('finished', function(blob) {
+		var exportGifUrl = URL.createObjectURL(blob);
+		me.exportGifUrl = exportGifUrl;
+		me.$exportWindow.find('#download-export')[0].href = exportGifUrl;
 		me.$loader.hide();
-		me.changeFrame(me.currentFrameIndex);
-	  	window.open(URL.createObjectURL(blob));
+	  	me.$exportWindow.show();
 	});
 
 	gif.render();
