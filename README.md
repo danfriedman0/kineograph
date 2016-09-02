@@ -55,11 +55,11 @@ When you're done with your animation, click the `export` button to export it as 
 Kineograph is currently a functional client-side animation platform, but there are still some more features I would like to add.
 
 * Drawing tools
-..* Primitives: straight lines, circles, rectangles, polygons
-..* A paint bucket tool
-..* Color picker
+  * Primitives: straight lines, circles, rectangles, polygons
+  * A paint bucket tool
+  * Color picker
 * Selection
-..* You should be able to select a section of your canvas and move it around, or copy it and paste it somewhere else.
+  * You should be able to select a section of your canvas and move it around, or copy it and paste it somewhere else.
 * Importing images
 
 It would be nice if you could save your works-in-progress somewhere and load them later. I plan to do this at some point but it will mean developing Kineograph into a full-stack web application, which will take some time. Stay tuned!
