@@ -55,7 +55,7 @@
 		<div id="kg-buttons" class="flex-row flex-stretch">
 			<div class="kg-button-group flex-row flex-stretch">
 				<div>
-					<input id="use-onion-skin" type="checkbox">
+					<input id="use-onion-skin" type="checkbox" checked>
 					<label for="use-onion-skin" class="small-text">onion skin:</label>
 					<select class="onion-skin-depth back" disabled>
 						<option value="0">0</option>
@@ -132,6 +132,9 @@
 				<div>
 					<label for="frame-number" class="small-text">frame:</label>
 					<input id="frame-number" type="text" size="3" value="1">
+				</div>
+				<div>
+					<button id="export">export</button>
 				</div>
 			</div>
 		</div>
@@ -310,9 +313,12 @@
 
 	</div><!-- #kgraph -->
 
+	<div id="loader"><img src="images/loader.gif"></div>
+
 
 	<script src="jquery.min.js"></script>
 	<script src="jquery-ui.min.js"></script>
-	<script src="whammy.js"></script>
+	<script src="gif.js"></script>
+	<script src="gif.worker.js"></script>
 	<script src="scripts.js"></script>
 </body>

@@ -15,6 +15,7 @@ function KGraph($kgraph, templates) {
 	this.$playhead = $kgraph.find('#playhead');
 	this.$playButton = $kgraph.find('#play-button i');
 	this.$ruler = $kgraph.find('#ruler');
+	this.$loader = $('#loader');
 
 	this.templates = templates;
 	this.gridLength = templates.$timelineLayerTemplate.find('td').length;
@@ -344,6 +345,18 @@ function KGraph($kgraph, templates) {
 			onionSkin.clear();
 		});
 		me.renderOnionSkin();
+	});
+
+	/*** Loader */
+
+	// prevent scrolling while loader is visible
+	me.$loader.on('mousewheel DOMMouseScroll', function(e) {
+		e.preventDefault();
+	});
+
+	/*** Export animation */
+	me.$kgraph.find('#export').on('click', function() {
+		me.exportAnimation();
 	});
 }
 
@@ -779,6 +792,107 @@ KGraph.prototype.renderOnionSkin = function() {
 
 	}
 }
+
+/*** Export animation */
+
+// Take an array of cels and merge them into one cel (used for flattening layers)
+KGraph.prototype.mergeCels = function(cels) {
+
+	// the gif encoder doesn't handle transparency properly so get a solid white canvas and merge
+	// all the cels down onto it
+	var activeLayer = this.activeLayer;
+	activeLayer.ctx.fillStyle = '#fff';
+	activeLayer.ctx.fillRect(0, 0, activeLayer.canvas.width, activeLayer.canvas.height);
+
+	var newCel = activeLayer.ctx.getImageData(0, 0, activeLayer.canvas.width, activeLayer.canvas.height),
+		newData = newCel.data,
+		me = this,
+		data, i;
+
+	cels.forEach(function(cel) {
+		data = cel.data;
+		for (i = 0; i < data.length; i += 4) {
+
+			// TODO: really I should be averaging the cels if 0 < transparency < 255 but there are
+			// aliasing problems.
+			if (data[i+3] > 0) {
+				newData[i] = data[i];
+				newData[i+1] = data[i+1];
+				newData[i+2] = data[i+2];
+				newData[i+3] = data[i+3];
+			}
+		}
+	});
+
+	return newCel;
+}
+
+// Merge all of the timeline layers into one export layer
+KGraph.prototype.mergeLayers = function() {
+	var timelineLayers = this.timelineLayers,
+		exportLayer = [],
+		lastFrameIndex = this.getLastFrameIndex(),
+		i, frameCels, frame;
+
+	for (i = 0; i < lastFrameIndex + 1; i++) {
+		frameCels = [];
+		timelineLayers.forEach(function(layer) {
+			if (layer.cels[i]) {
+				frameCels.push(layer.cels[i]);
+			}
+		});
+		
+		frame = this.mergeCels(frameCels);
+
+		exportLayer.push(frame);
+	}
+
+	return exportLayer;
+}
+
+KGraph.prototype.exportAnimation = function() {
+	var me = this;
+	me.$loader.show();
+
+	// clear everything
+	me.timelineLayers.forEach(function(layer) {
+		layer.clear();
+	});
+	me.onionSkins.forEach(function(os) {
+		os.clear();
+	});
+
+	// first merge all of the layers into one layer for export
+	var exportLayer = me.mergeLayers();
+
+	var gif = new GIF({
+		workers: 2,
+		quality: 10,
+		width: 840,
+		height: 480
+	});
+
+	// calculate the delay in milliseconds. Unfortunately this will round to the nearest multiple of 10
+	// because delay is encoded in the gif in hundredths of a second. So there's no way to get exactly 12 fps.
+	var delay = Math.round(1000/me.fps);
+
+	// draw each frame on the active layer canvas and add it to the gif
+	var activeLayer = me.activeLayer;
+	for (var i = 0; i < exportLayer.length; i++) {
+		activeLayer.drawCel(exportLayer[i]);
+		gif.addFrame(activeLayer.ctx, {copy: true, delay: delay});
+	}
+	activeLayer.clear();
+
+	gif.on('finished', function(blob) {
+		me.$loader.hide();
+		me.changeFrame(me.currentFrameIndex);
+	  	window.open(URL.createObjectURL(blob));
+	});
+
+	gif.render();
+}
+
 
 /*************************************************************************************************/
 /* KGraph.KCanvas ********************************************************************************/
